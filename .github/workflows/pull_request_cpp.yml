@@ -19,10 +19,12 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y cmake g++ clang-format clang-tidy
+
+    - name: Show clang-format version
+      run: clang-format --version
       
     - name: Check code formatting
       run: |
         echo "Running clang-format check..."
-        find src -type f \( \
-          -path "src/*.cpp" -o \
-        \) -exec clang-format --dry-run --Werror {} +
+        find src -type f \( -name "*.cpp" -o -name "*.hpp" \) -exec clang-format --dry-run --Werror {} +
+
