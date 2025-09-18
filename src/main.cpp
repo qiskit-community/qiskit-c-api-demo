@@ -70,8 +70,8 @@ generate_counts_uniform(int num_samples, int num_bits,
 }
 
 // Convert an array of boost::dynamic_bitset<> to string-based BitString objects.
-static auto bitsets_to_bitstrings(const std::vector<boost::dynamic_bitset<>>& bitsets)
-    -> std::vector<BitString>
+static auto
+bitsets_to_bitstrings(const std::vector<boost::dynamic_bitset<>>& bitsets) -> std::vector<BitString>
 {
     std::vector<BitString> bitstrings;
     bitstrings.reserve(bitsets.size());
