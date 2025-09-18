@@ -290,9 +290,8 @@ int main(int argc, char* argv[])
 
         // Construct the spin-balanced UCJ operator from parameter vector.
 
-        UCJOpSpinBalanced ucj_op = UCJOpSpinBalanced::from_parameters(
-            params, norb, n_reps, interaction_pairs, true
-        );
+        UCJOpSpinBalanced ucj_op =
+            UCJOpSpinBalanced::from_parameters(params, norb, n_reps, interaction_pairs, true);
         std::vector<uint32_t> qubits(2 * norb);
         std::iota(qubits.begin(), qubits.end(), 0);
         auto instructions = hf_and_ucj_op_spin_balanced_jw(qubits, nelec, ucj_op);
@@ -304,17 +303,25 @@ int main(int argc, char* argv[])
 
         // add gates from instruction list from hf_and_ucj_op_spin_balanced_jw
         //   for demo: calling Qiskit C++ circuit functions to make quantum circuit
-        for (const auto &instr : instructions) {
-            if (std::string("x") == instr.gate) {
+        for (const auto& instr : instructions)
+        {
+            if (std::string("x") == instr.gate)
+            {
                 // X gate
                 circ.x(instr.qubits[0]);
-            } else if (std::string("rz") == instr.gate) {
+            }
+            else if (std::string("rz") == instr.gate)
+            {
                 // RZ gate
                 circ.rz(instr.params[0], instr.qubits[0]);
-            } else if (std::string("cp") == instr.gate) {
+            }
+            else if (std::string("cp") == instr.gate)
+            {
                 // controlled phase gate
                 circ.cp(instr.params[0], instr.qubits[0], instr.qubits[1]);
-            } else if (std::string("xx_plus_yy") == instr.gate) {
+            }
+            else if (std::string("xx_plus_yy") == instr.gate)
+            {
                 // XX_plus_YY gate
                 circ.xx_plus_yy(instr.params[0], instr.params[1], instr.qubits[0], instr.qubits[1]);
             }
@@ -329,7 +336,8 @@ int main(int argc, char* argv[])
         // }
 
         // sampling all the qubits
-        for (size_t i = 0; i < circ.num_qubits(); ++i) {
+        for (size_t i = 0; i < circ.num_qubits(); ++i)
+        {
             circ.measure(i, i);
         }
 
