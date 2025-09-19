@@ -133,7 +133,8 @@ You can obtain these credentials from your IBM Quantum account.
   --max_time 600 \
   --recovery 1 \
   --number_of_samples 300 \
-  --num_shots 10000
+  --num_shots 1000 \
+  --backend_name <your backend name>
 ```
 
 ### MPI Execution
@@ -147,6 +148,7 @@ mpirun -np 96 ./capi-demo \
   --recovery 1 \
   --number_of_samples 2000 \
   --num_shots 10000 \
+  --backend_name <your backend name>
 ```
 
 ## Run Options
