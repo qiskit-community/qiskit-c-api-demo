@@ -9,7 +9,7 @@
 	url = https://github.com/Qiskit/qiskit-cpp.git
 [submodule "deps/qrmi"]
 	path = deps/qrmi
-	url = https://github.com/qiskit-community/qrmi.git
+	url = ttps://github.com/qiskit-community/qrmi.git
 [submodule "deps/qiskit-addon-sqd-hpc"]
 	path = deps/qiskit-addon-sqd-hpc
 	url = https://github.com/Qiskit/qiskit-addon-sqd-hpc.git
