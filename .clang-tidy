@@ -1,0 +1,3 @@
+---
+Checks: 'bugprone-*,performance-*,-performance-avoid-endl'
+WarningsAsErrors: '*'
