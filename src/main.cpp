@@ -48,7 +48,7 @@ using Sampler = BackendSamplerV2;
 // with Bernoulli(p=0.5) and aggregate into counts (bitstring -> occurrences).
 // Use this when a real backend/simulator is unavailable (debugging).
 std::unordered_map<std::string, uint64_t>
-generate_counts_uniform(int num_samples, int num_bits,
+generate_counts_uniform(int num_samples, int num_bits,  // NOLINT(bugprone-easily-swappable-parameters)
                         std::optional<unsigned int> seed = std::nullopt)
 {
     std::mt19937 rng(seed.value_or(std::random_device{}()));
@@ -70,8 +70,8 @@ generate_counts_uniform(int num_samples, int num_bits,
 }
 
 // Convert an array of boost::dynamic_bitset<> to string-based BitString objects.
-static auto
-bitsets_to_bitstrings(const std::vector<boost::dynamic_bitset<>>& bitsets) -> std::vector<BitString>
+static auto bitsets_to_bitstrings(const std::vector<boost::dynamic_bitset<>>& bitsets)
+    -> std::vector<BitString>
 {
     std::vector<BitString> bitstrings;
     bitstrings.reserve(bitsets.size());
@@ -117,8 +117,8 @@ std::array<std::vector<double>, 2> load_initial_occupancies(const std::string& f
     }
     const auto half_size = init_occupancy.size() / 2;
 
-    std::vector<double> alpha_occupancy(init_occupancy.begin(), init_occupancy.begin() + half_size);
-    std::vector<double> beta_occupancy(init_occupancy.begin() + half_size, init_occupancy.end());
+    std::vector<double> alpha_occupancy(init_occupancy.begin(), init_occupancy.begin() + static_cast<std::ptrdiff_t>(half_size));
+    std::vector<double> beta_occupancy(init_occupancy.begin() + static_cast<std::ptrdiff_t>(half_size), init_occupancy.end());
 
     std::reverse(alpha_occupancy.begin(), alpha_occupancy.end());
     std::reverse(beta_occupancy.begin(), beta_occupancy.end());
@@ -129,7 +129,7 @@ std::array<std::vector<double>, 2> load_initial_occupancies(const std::string& f
 // Utility: normalize counts (occurrences) into probabilities in [0,1].
 // Empty input returns an empty map (no exception).
 std::unordered_map<std::string, double>
-_normalize_counts_dict(const std::unordered_map<std::string, uint64_t>& counts)
+normalize_counts_dict(const std::unordered_map<std::string, uint64_t>& counts)
 {
     // Check if the input map is empty
     if (counts.empty())
@@ -146,7 +146,7 @@ _normalize_counts_dict(const std::unordered_map<std::string, uint64_t>& counts)
     std::unordered_map<std::string, double> probabilities;
     for (const auto& [key, value] : counts)
     {
-        probabilities[key] = static_cast<double>(value) / total_counts;
+        probabilities[key] = static_cast<double>(value) / static_cast<double>(total_counts);
     }
 
     return probabilities;
@@ -164,7 +164,7 @@ counts_to_arrays(const std::unordered_map<std::string, uint64_t>& counts)
         return {bs_mat, freq_arr};
 
     // Normalize the counts to probabilities
-    auto prob_dict = _normalize_counts_dict(counts);
+    auto prob_dict = normalize_counts_dict(counts);
 
     // Convert bitstrings to a 2D boolean matrix
     for (const auto& [bitstring, _] : prob_dict)
@@ -186,7 +186,9 @@ using namespace ffsim;
 
 int main(int argc, char* argv[])
 {
-    // ===== MPI initialization =====
+    try
+    {
+        // ===== MPI initialization =====
     // This workflow assumes MPI. Request FUNNELED (only main thread calls MPI).
     int provided;
     int mpi_init_error = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
@@ -211,7 +213,7 @@ int main(int argc, char* argv[])
     sqd_data.comm = MPI_COMM_WORLD;
     MPI_Comm_rank(sqd_data.comm, &sqd_data.mpi_rank);
     MPI_Comm_size(sqd_data.comm, &sqd_data.mpi_size);
-    int message_size = sqd_data.run_id.size();
+    int message_size = static_cast<int>(sqd_data.run_id.size());
     MPI_Bcast(&message_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (sqd_data.mpi_rank != 0)
     {
@@ -228,7 +230,6 @@ int main(int argc, char* argv[])
     std::mt19937 rc_rng(rng());
     // Batch sizing for SBD input (alpha-determinant groups).
     uint64_t samples_per_batch = sqd_data.samples_per_batch;
-    uint64_t n_batches = sqd_data.n_batches;
 
     // Read initial parameters (norb, nelec, params for lucj) from JSON.
     const std::string input_file_path = "../data/parameters_fe4s4.json";
@@ -257,7 +258,6 @@ int main(int argc, char* argv[])
         log(sqd_data,
             {"initial parameters are loaded. param_length=", std::to_string(init_params.size())});
     }
-    int node_per_member = sqd_data.mpi_size;
 
     // Measurement results: (bitstring -> counts). Produced on rank 0, then array-ified
     // later.
@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
         Eigen::VectorXcd params(params_size);
         for (size_t i = 0; i < params_size; ++i)
         {
-            params(i) = init_params[i];
+            params(static_cast<Eigen::Index>(i)) = init_params[i];
         }
         std::optional<MatrixXcd> t1 = std::nullopt;
         // 'interaction_pairs' allows passing (alpha-alpha, alpha-beta/beta-beta)
@@ -378,7 +378,7 @@ int main(int argc, char* argv[])
     std::vector<boost::dynamic_bitset<>> bs_mat_tmp;
     std::vector<double> probs_arr_tmp;
     std::array<std::vector<double>, 2> latest_occupancies, initial_occupancies;
-    int n_recovery = sqd_data.n_recovery;
+    int n_recovery = static_cast<int>(sqd_data.n_recovery);
 
     try
     {
@@ -451,8 +451,21 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Synchronize and tear down MPI. No MPI calls are allowed beyond this point.
-    MPI_Finalize();
+        // Synchronize and tear down MPI. No MPI calls are allowed beyond this point.
+        MPI_Finalize();
 
-    return 0;
+        return 0;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Unhandled exception in main: " << e.what() << std::endl;
+        MPI_Finalize();
+        return 1;
+    }
+    catch (...)
+    {
+        std::cerr << "Unknown exception in main" << std::endl;
+        MPI_Finalize();
+        return 1;
+    }
 }

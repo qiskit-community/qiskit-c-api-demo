@@ -12,8 +12,8 @@
 # that they have been altered from the originals.
 */
 
-#ifndef __sqd_helper_hpp__
-#define __sqd_helper_hpp__
+#ifndef SQD_HELPER_HPP_
+#define SQD_HELPER_HPP_
 
 #include <chrono>
 #include <fstream>
@@ -24,7 +24,7 @@
 
 #include <unistd.h>
 
-#define _USE_MATH_DEFINES
+#define USE_MATH_DEFINES
 #include <cmath>
 
 #include "mpi.h"
@@ -55,7 +55,7 @@ struct UArrayString
     size_t nbits;
     const static size_t REG_SIZE = 64;
 
-    static size_t _VEC_SIZE(size_t nbits)
+    static size_t VEC_SIZE(size_t nbits)
     {
         return nbits / REG_SIZE + ((nbits % REG_SIZE) == 0 ? 0 : 1);
     }
@@ -111,7 +111,7 @@ struct UArrayString
     inline bool operator[](const size_t idx) const { return get(idx); }
 };
 
-UArrayString::UArrayString(uint64_t src, size_t nbits_) : data({src}), nbits(nbits_)
+UArrayString::UArrayString(uint64_t src, size_t nbits_) : data({src}), nbits(nbits_)  // NOLINT(bugprone-easily-swappable-parameters)
 {
     if (nbits_ > 1)
         data.resize(nbits_, 0UL);
@@ -123,13 +123,13 @@ UArrayString::UArrayString(const std::vector<uint64_t>& src, const size_t nbits_
 }
 
 UArrayString::UArrayString(const std::vector<bool>& src)
-    : data(_VEC_SIZE(src.size())), nbits(src.size())
+    : data(VEC_SIZE(src.size())), nbits(src.size())
 {
     for (size_t i = 0; i < src.size(); ++i)
         set(i, src[i]);
 }
 
-UArrayString::UArrayString(const std::string& src) : data(_VEC_SIZE(src.size())), nbits(src.size())
+UArrayString::UArrayString(const std::string& src) : data(VEC_SIZE(src.size())), nbits(src.size())
 {
     for (size_t i = 0; i < src.size(); ++i)
         set(i, src[i] == '1');
@@ -139,7 +139,7 @@ UArrayString::UArrayString(std::initializer_list<bool> init)
 {
     std::vector<bool> src(init);
     nbits = src.size();
-    data = std::vector<uint64_t>(_VEC_SIZE(src.size()));
+    data = std::vector<uint64_t>(VEC_SIZE(src.size()));
     for (size_t i = 0; i < src.size(); ++i)
         set(i, src[i]);
 }
@@ -190,7 +190,7 @@ std::vector<bool> UArrayString::to_vector(void) const
     return ret;
 }
 
-size_t UArrayString::get_counts(const size_t from, const size_t until, const bool value) const
+size_t UArrayString::get_counts(const size_t from, const size_t until, const bool value) const  // NOLINT(bugprone-easily-swappable-parameters)
 {
     size_t ret = 0;
     for (size_t i = from; i < until; ++i)
@@ -199,7 +199,7 @@ size_t UArrayString::get_counts(const size_t from, const size_t until, const boo
     return ret;
 }
 
-std::vector<size_t> UArrayString::get_indices(const size_t from, const size_t until,
+std::vector<size_t> UArrayString::get_indices(const size_t from, const size_t until,  // NOLINT(bugprone-easily-swappable-parameters)
                                               const bool value) const
 {
     std::vector<size_t> ret;
@@ -304,17 +304,6 @@ void error(const SQD& sqd_data, const std::vector<std::string>& messages)
     }
 }
 
-std::vector<std::string> split_string(const std::string& str)
-{
-    std::vector<std::string> result;
-    std::stringstream ss(str);
-    std::string token;
-
-    while (std::getline(ss, token, ','))
-        result.push_back(token);
-
-    return result;
-}
 
 SQD generate_sqd_data(int argc, char* argv[])
 {
@@ -354,7 +343,7 @@ SQD generate_sqd_data(int argc, char* argv[])
     return sqd;
 }
 
-std::vector<uint8_t> integer_to_bytes(uint64_t n, int norb)
+std::vector<uint8_t> integer_to_bytes(uint64_t n, int norb)  // NOLINT(bugprone-easily-swappable-parameters)
 {
     int num_bytes = (norb + 7) / 8;
     std::vector<uint8_t> result(num_bytes);
@@ -371,6 +360,7 @@ std::vector<uint8_t> integer_to_bytes(uint64_t n, int norb)
 std::vector<std::vector<uint8_t>> ci_strs_to_bytes(const std::vector<uint64_t>& ci_strs, int norb)
 {
     std::vector<std::vector<uint8_t>> bytes;
+    bytes.reserve(ci_strs.size());
     for (uint64_t ci_str : ci_strs)
     {
         bytes.push_back(integer_to_bytes(ci_str, norb));
@@ -406,15 +396,15 @@ void write_bytestrings_to_file(const std::vector<std::vector<uint8_t>>& byte_str
 
     for (const auto& byte_string : byte_strings)
     {
-        output_file.write(reinterpret_cast<const char*>(byte_string.data()), byte_string.size());
+        output_file.write(reinterpret_cast<const char*>(byte_string.data()), static_cast<std::streamsize>(byte_string.size()));
     }
 
     output_file.close();
 }
 
-std::string write_alphadets_file(const SQD& sqd_data, const size_t norb, const size_t num_elec,
+std::string write_alphadets_file(const SQD& sqd_data, const size_t norb, const size_t num_elec,  // NOLINT(bugprone-easily-swappable-parameters)
                                  const std::vector<BitString>& batch,
-                                 const size_t maximum_numbers_of_ctrs, const size_t i_recovery)
+                                 const size_t maximum_numbers_of_ctrs, const size_t i_recovery)  // NOLINT(bugprone-easily-swappable-parameters)
 {
     log(sqd_data, {"number of items in a batch: ", std::to_string(batch.size())});
     bool open_shell = false;
@@ -436,7 +426,7 @@ std::string write_alphadets_file(const SQD& sqd_data, const size_t norb, const s
         log(sqd_data, {"number of unique ci_strs:", std::to_string(unique_ci_strs.size()),
                        ", truncated:", std::to_string(truncated)});
     }
-    auto bytestrings = ci_strs_to_bytes(unique_ci_strs, norb);
+    auto bytestrings = ci_strs_to_bytes(unique_ci_strs, static_cast<int>(norb));
     std::string alphadets_bin_file =
         "AlphaDets_" + sqd_data.run_id + "_" + std::to_string(i_recovery) + "_cpp.bin";
     write_bytestrings_to_file(bytestrings, alphadets_bin_file);

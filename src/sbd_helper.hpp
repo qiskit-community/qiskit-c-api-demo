@@ -12,8 +12,8 @@
 # that they have been altered from the originals.
 */
 
-#ifndef __sbd_helper_hpp__
-#define __sbd_helper_hpp__
+#ifndef SBD_HELPER_HPP_
+#define SBD_HELPER_HPP_
 
 #include <chrono>
 #include <fstream>
@@ -26,7 +26,7 @@
 #include <unistd.h>
 #endif
 
-#define _USE_MATH_DEFINES
+#define USE_MATH_DEFINES
 #include <cmath>
 
 #include "mpi.h"
@@ -119,8 +119,6 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     int adet_comm_size = sbd_data.adet_comm_size;
     int bdet_comm_size = sbd_data.bdet_comm_size;
     int base_comm_size;
-    int h_comm_size = sbd_data.h_comm_size;
-
     int L;
     int N;
 
@@ -138,7 +136,7 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     std::string fcidumpfile = sbd_data.fcidumpfile;
 
     base_comm_size = adet_comm_size * bdet_comm_size * task_comm_size;
-    h_comm_size = mpi_size / base_comm_size;
+    int h_comm_size = mpi_size / base_comm_size;
 
     if (mpi_size != base_comm_size * h_comm_size)
     {
@@ -188,16 +186,10 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     sbd::TaskCommunicator(comm, h_comm_size, adet_comm_size, bdet_comm_size, task_comm_size, h_comm,
                           b_comm, t_comm);
 
-    auto time_start_help = std::chrono::high_resolution_clock::now();
     sbd::MakeHelpers(adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
                      adet_comm_size, bdet_comm_size);
     sbd::RemakeHelpers(adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
                        adet_comm_size, bdet_comm_size);
-    auto time_end_help = std::chrono::high_resolution_clock::now();
-    auto elapsed_help_count =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_end_help - time_start_help)
-            .count();
-    double elapsed_help = 0.000001 * elapsed_help_count;
 
     int mpi_rank_h;
     MPI_Comm_rank(h_comm, &mpi_rank_h);
@@ -215,37 +207,24 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     /**
        Initialize/Load wave function
      */
-    auto time_start_init = std::chrono::high_resolution_clock::now();
     std::vector<double> W;
     sbd::BasisInitVector(W, adet, bdet, adet_comm_size, bdet_comm_size, h_comm, b_comm, t_comm,
                          init);
-    auto time_end_init = std::chrono::high_resolution_clock::now();
-    auto elapsed_init_count =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_end_init - time_start_init)
-            .count();
-    double elapsed_init = 1.0e-6 * elapsed_init_count;
-
     /**
        Diagonalization
      */
     std::vector<double> hii;
     auto time_start_diag = std::chrono::high_resolution_clock::now();
-    auto time_start_davidson = std::chrono::high_resolution_clock::now();
     sbd::makeQChamDiagTerms(adet, bdet, bit_length, L, helper, I0, I1, I2, hii, h_comm, b_comm,
                             t_comm);
     sbd::Davidson(hii, W, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
                   bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm, max_it, max_nb, eps,
                   max_time);
-    auto time_end_davidson = std::chrono::high_resolution_clock::now();
-    auto elapsed_davidson_count = std::chrono::duration_cast<std::chrono::microseconds>(
-                                      time_end_davidson - time_start_davidson)
-                                      .count();
-    double elapsed_davidson = 0.000001 * elapsed_davidson_count;
     auto time_end_diag = std::chrono::high_resolution_clock::now();
     auto elapsed_diag_count =
         std::chrono::duration_cast<std::chrono::microseconds>(time_end_diag - time_start_diag)
             .count();
-    double elapsed_diag = 0.000001 * elapsed_diag_count;
+    double elapsed_diag = 0.000001 * static_cast<double>(elapsed_diag_count);
     if (mpi_rank == 0)
         std::cout << " Elapsed time for diagonalization " << elapsed_diag << " (sec) " << std::endl;
 
@@ -255,15 +234,9 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
 
     std::vector<double> C(W.size(), 0.0);
 
-    auto time_start_mult = std::chrono::high_resolution_clock::now();
     sbd::mult(hii, W, C, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
               bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm);
 
-    auto time_end_mult = std::chrono::high_resolution_clock::now();
-    auto elapsed_mult_count =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_end_mult - time_start_mult)
-            .count();
-    double elapsed_mult = 0.000001 * elapsed_mult_count;
     sbd::InnerProduct(W, C, E, b_comm);
 
     if (energy_target != 0.0 && std::abs(E - energy_target) > energy_variance)
@@ -279,7 +252,6 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     /**
        Evaluation of single-particle occupation density
      */
-    auto time_start_meas = std::chrono::high_resolution_clock::now();
     int p_size = mpi_size_t * mpi_size_h;
     int p_rank = mpi_rank_h * mpi_size_t + mpi_rank_t;
     size_t o_start = 0;
@@ -291,9 +263,9 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     std::vector<double> res_density;
     sbd::OccupationDensity(oIdx, W, adet, bdet, bit_length, adet_comm_size, bdet_comm_size, b_comm,
                            res_density);
-    std::vector<double> density_rank(2 * L, 0.0);
-    std::vector<double> density_group(2 * L, 0.0);
-    std::vector<double> density(2 * L, 0.0);
+    std::vector<double> density_rank(static_cast<size_t>(2 * L), 0.0);
+    std::vector<double> density_group(static_cast<size_t>(2 * L), 0.0);
+    std::vector<double> density(static_cast<size_t>(2 * L), 0.0);
     for (size_t io = o_start; io < o_end; io++)
     {
         density_rank[2 * io] = res_density[2 * (io - o_start)];
@@ -301,15 +273,6 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     }
     MPI_Allreduce(density_rank.data(), density_group.data(), 2 * L, MPI_DOUBLE, MPI_SUM, t_comm);
     MPI_Allreduce(density_group.data(), density.data(), 2 * L, MPI_DOUBLE, MPI_SUM, h_comm);
-    auto time_end_meas = std::chrono::high_resolution_clock::now();
-    auto elapsed_meas_count =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_end_meas - time_start_meas)
-            .count();
-    double elapsed_meas = 0.000001 * elapsed_meas_count;
-    double threshold = 1.0e-2;
-    if (sbd_data.threshold != 0.0)
-        threshold = sbd_data.threshold;
-    std::vector<std::vector<size_t>> rdet;
 
     FreeHelpers(helper);
     return {E, density};
