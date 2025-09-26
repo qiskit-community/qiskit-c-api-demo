@@ -1,0 +1,50 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: lint check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Enable LLVM ppa
+        shell: bash
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          cat <<EOF | sudo tee -a /etc/apt/sources.list
+          deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main
+          deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main
+          EOF
+
+      - name: Install via apt-get
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fd-find clang-tidy-21 clang-format-21 cmake
+          sudo ln -fs clang-format-21 /usr/bin/clang-format
+          sudo ln -fs clang-tidy-21 /usr/bin/clang-tidy
+          sudo ln -fs /usr/bin/fdfind /usr/local/bin/fd
+
+      - name: Run clang-format check
+        run: |
+          fd '\.(cpp|hpp|h|c)$' src \
+            --exec clang-format --dry-run -Werror
+
+      - name: Configure CMake (for compile_commands.json)
+        run: cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -B build
+
+      - name: Run clang-tidy
+        run: |
+          fd '\.(cpp|hpp|h|c)$' src \
+            --exec-batch clang-tidy -p build --extra-arg=-Wno-error=missing-headers {} +

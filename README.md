@@ -170,7 +170,7 @@ The following command-line options are available when running capi-demo. These c
 |------------------------------|--------------------------------------------------------------------|---------------|
 | --fcidump <path>             | Path to FCIDUMP file containing molecular integrals.               | ""            |
 | --iteration <int>            | Maximum number of Davidson iterations.                             | 1             |
-| --block <int>                | Maximum size of Litz vector space.                                 | 10            |
+| --block <int>                | Maximum size of Ritz vector space.                                 | 10            |
 | --tolerance <float>          | Convergence tolerance for diagonalization.                        | 1.0e-12      |
 | --max_time <float>          | Maximum allowed time (in seconds) for diagonalization.            | 600.0        |
 | --adet_comm_size <int>      | Number of nodes used to split the alpha-determinants.            | 1             |

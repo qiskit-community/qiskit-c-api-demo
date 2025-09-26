@@ -1,0 +1,98 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  tests:
+    name: latest version tests (C++${{ matrix.cxx_standard }}, ${{ matrix.os }}, ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-22.04
+            compiler: g++
+            cxx_standard: 17
+          - os: ubuntu-22.04
+            compiler: clang++
+          - os: ubuntu-latest
+            compiler: g++
+          - os: ubuntu-latest
+            compiler: g++
+            cxx_standard: 20
+          - os: ubuntu-latest
+            compiler: g++
+            cxx_standard: 23
+          - os: ubuntu-latest
+            compiler: clang++
+          - os: ubuntu-latest
+            compiler: clang++
+            cxx_standard: 20
+          - os: ubuntu-latest
+            compiler: clang++
+            cxx_standard: 23
+          # Linux ARM
+          - os: ubuntu-22.04-arm
+            compiler: g++
+          - os: ubuntu-22.04-arm
+            compiler: clang++
+          # macOS x86_64
+          - os: macos-13
+            compiler: clang++
+          # macOS ARM
+          - os: macos-latest
+            compiler: clang++
+          # Windows
+          - os: windows-latest
+            compiler: MSVC
+          - os: windows-latest
+            compiler: MSVC
+            cxx_standard: 20
+          - os: windows-latest
+            compiler: MSVC
+            cxx_standard: 23
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ clang cmake ninja-build
+      - name: Configure CMake
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+          ${{ matrix.compiler != 'MSVC' && '-G Ninja' || '' }}
+          ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
+          ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+      - name: CMake Build
+        run: >-
+          cmake --build build -j4
+          ${{ matrix.compiler == 'MSVC' && '--config Release' || '' }}
+      - name: Copy build/Release/*.exe to build/ (MSVC)
+        if: matrix.compiler == 'MSVC'
+        run: |
+          cp build/Release/*.exe build/
+      - name: Run tests
+        run: |
+          cd build
+          ./capi-demo \
+            --fcidump ../data/fcidump_Fe4S4_MO.txt \
+            --tolerance 1.0e-3 \
+            --max_time 600 \
+            --recovery 1 \
+            --number_of_samples 300 \
+            --num_shots 1000
