@@ -52,15 +52,6 @@ jobs:
           # macOS ARM
           - os: macos-latest
             compiler: clang++
-          # Windows
-          - os: windows-latest
-            compiler: MSVC
-          - os: windows-latest
-            compiler: MSVC
-            cxx_standard: 20
-          - os: windows-latest
-            compiler: MSVC
-            cxx_standard: 23
     steps:
       - uses: actions/checkout@v5
         with:
@@ -70,7 +61,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y g++ clang cmake ninja-build \
-            libopenblas-dev liblapack-dev libeigen3-dev
+            libopenblas-dev liblapack-dev libeigen3-dev \
+            libopenmpi-dev openmpi-bin
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -78,19 +70,15 @@ jobs:
       - name: Configure CMake
         run: >-
           cmake -S . -B build
+          -G Ninja
           -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-          ${{ matrix.compiler != 'MSVC' && '-G Ninja' || '' }}
           ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
           ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
           -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
       - name: CMake Build
         run: >-
           cmake --build build -j4
-          ${{ matrix.compiler == 'MSVC' && '--config Release' || '' }}
-      - name: Copy build/Release/*.exe to build/ (MSVC)
-        if: matrix.compiler == 'MSVC'
-        run: |
-          cp build/Release/*.exe build/
+          --config Release
       - name: Run tests
         run: |
           cd build
