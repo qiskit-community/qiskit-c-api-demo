@@ -36,29 +36,35 @@ using namespace gates;
  * @param orbital_rotation Orbital rotation matrix
  * @return Vector of `CircuitInstruction` objects implementing the rotation
  */
-std::vector<CircuitInstruction> orbital_rotation_jw(const std::vector<uint32_t>& qubits,
-                                                    const MatrixXcd& orbital_rotation)
+std::vector<CircuitInstruction> orbital_rotation_jw(
+    const std::vector<uint32_t> &qubits, const MatrixXcd &orbital_rotation
+)
 {
-    auto [givens_rotations, phase_shifts] = linalg::givens_decomposition(orbital_rotation);
+    auto [givens_rotations, phase_shifts] =
+        linalg::givens_decomposition(orbital_rotation);
     std::vector<CircuitInstruction> instructions;
 
-    for (const auto& rotation : givens_rotations)
-    {
+    for (const auto &rotation : givens_rotations) {
         double c = round_for_acos(rotation.c);
         double theta = 2.0 * std::acos(c);
         double beta = std::arg(rotation.s) - 0.5 * M_PI;
-        instructions.push_back({"xx_plus_yy",
-                                {static_cast<unsigned int>(qubits[rotation.i]),
-                                 static_cast<unsigned int>(qubits[rotation.j])},
-                                {},
-                                std::vector<double>{theta, beta}});
+        instructions.push_back(
+            {"xx_plus_yy",
+             {static_cast<unsigned int>(qubits[rotation.i]),
+              static_cast<unsigned int>(qubits[rotation.j])},
+             {},
+             std::vector<double>{theta, beta}}
+        );
     }
 
-    for (size_t i = 0; i < phase_shifts.size(); ++i)
-    {
+    for (size_t i = 0; i < phase_shifts.size(); ++i) {
         double theta = std::arg(phase_shifts(static_cast<Index>(i)));
         instructions.push_back(
-            {"rz", {static_cast<unsigned int>(qubits[i])}, {}, std::vector<double>{theta}});
+            {"rz",
+             {static_cast<unsigned int>(qubits[i])},
+             {},
+             std::vector<double>{theta}}
+        );
     }
 
     return instructions;
@@ -84,25 +90,25 @@ class OrbitalRotationJW
      *
      * @throws std::runtime_error if validation fails
      */
-    OrbitalRotationJW(uint64_t norb, const OrbitalRotation& orbital_rotation, bool validate = true,
-                      double rtol = 1e-5, double atol = 1e-8)
-        : norb(norb)
+    OrbitalRotationJW(
+        uint64_t norb, const OrbitalRotation &orbital_rotation, bool validate = true,
+        double rtol = 1e-5, double atol = 1e-8
+    )
+      : norb(norb)
     {
-        if (validate)
-        {
+        if (validate) {
             validate_orbital_rotation(orbital_rotation, rtol, atol);
         }
-        if (orbital_rotation.type == OrbitalRotationType::Spinless)
-        {
+        if (orbital_rotation.type == OrbitalRotationType::Spinless) {
             orbital_rotation_a = orbital_rotation.spinless;
             orbital_rotation_b = orbital_rotation.spinless;
-        }
-        else
-        {
-            orbital_rotation_a =
-                orbital_rotation.spinfull[0].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
-            orbital_rotation_b =
-                orbital_rotation.spinfull[1].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
+        } else {
+            orbital_rotation_a = orbital_rotation.spinfull[0].value_or(
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb))
+            );
+            orbital_rotation_b = orbital_rotation.spinfull[1].value_or(
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb))
+            );
         }
     }
 
@@ -113,7 +119,8 @@ class OrbitalRotationJW
      * orbitals)
      * @return Vector of `CircuitInstruction` objects encoding the gate sequence
      */
-    std::vector<CircuitInstruction> instructions(const std::vector<uint32_t>& qubits) const
+    std::vector<CircuitInstruction>
+    instructions(const std::vector<uint32_t> &qubits) const
     {
         auto norb_tmp = static_cast<std::ptrdiff_t>(qubits.size() / 2);
         std::vector<uint32_t> alpha_qubits(qubits.begin(), qubits.begin() + norb_tmp);
@@ -121,7 +128,9 @@ class OrbitalRotationJW
 
         auto instructions = orbital_rotation_jw(alpha_qubits, orbital_rotation_a);
         auto beta_instructions = orbital_rotation_jw(beta_qubits, orbital_rotation_b);
-        instructions.insert(instructions.end(), beta_instructions.begin(), beta_instructions.end());
+        instructions.insert(
+            instructions.end(), beta_instructions.begin(), beta_instructions.end()
+        );
         return instructions;
     }
 

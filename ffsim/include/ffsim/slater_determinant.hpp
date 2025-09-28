@@ -39,19 +39,16 @@ using CircuitInstruction = ffsim::CircuitInstruction;
  * @param orbital_coeffs Matrix representing occupied orbitals
  * @return List of Givens rotations that diagonalize the matrix
  */
-std::vector<GivensRotation> givens_decomposition_slater(const MatrixXcd& orbital_coeffs)
+std::vector<GivensRotation> givens_decomposition_slater(const MatrixXcd &orbital_coeffs)
 {
     size_t m = orbital_coeffs.rows();
     size_t n = orbital_coeffs.cols();
     MatrixXcd mat = orbital_coeffs;
 
     std::vector<GivensRotation> rotations;
-    for (int j = static_cast<int>(n - 1); j >= static_cast<int>(n - m + 1); --j)
-    {
-        for (int i = 0; i < static_cast<int>(m - n + j); ++i)
-        {
-            if (std::norm(mat(i, j)) > 0.0)
-            {
+    for (int j = static_cast<int>(n - 1); j >= static_cast<int>(n - m + 1); --j) {
+        for (int i = 0; i < static_cast<int>(m - n + j); ++i) {
+            if (std::norm(mat(i, j)) > 0.0) {
                 auto [c, s, _] = zrotg(mat(i + 1, j), mat(i, j));
 
                 VectorXcd row1 = mat.row(i + 1).transpose();
@@ -63,13 +60,13 @@ std::vector<GivensRotation> givens_decomposition_slater(const MatrixXcd& orbital
         }
     }
 
-    for (size_t i = 0; i < m; ++i)
-    {
-        for (int j = static_cast<int>(n - m + i); j > static_cast<int>(i); --j)
-        {
-            if (std::norm(mat(static_cast<Index>(i), static_cast<Index>(j))) > 0.0)
-            {
-                auto [c, s, _] = zrotg(mat(static_cast<Index>(i), static_cast<Index>(j - 1)), mat(static_cast<Index>(i), static_cast<Index>(j)));
+    for (size_t i = 0; i < m; ++i) {
+        for (int j = static_cast<int>(n - m + i); j > static_cast<int>(i); --j) {
+            if (std::norm(mat(static_cast<Index>(i), static_cast<Index>(j))) > 0.0) {
+                auto [c, s, _] = zrotg(
+                    mat(static_cast<Index>(i), static_cast<Index>(j - 1)),
+                    mat(static_cast<Index>(i), static_cast<Index>(j))
+                );
                 rotations.emplace_back(c, s, j, j - 1);
                 VectorXcd col1 = mat.col(j - 1).transpose();
                 VectorXcd col2 = mat.col(j).transpose();
@@ -93,8 +90,9 @@ std::vector<GivensRotation> givens_decomposition_slater(const MatrixXcd& orbital
  * @return List of Jordan-Wigner circuit instructions implementing the state
  * preparation
  */
-std::vector<CircuitInstruction> prepare_slater_determinant_jw(const std::vector<uint32_t>& qubits,
-                                                              const MatrixXcd& orbital_coeffs)
+std::vector<CircuitInstruction> prepare_slater_determinant_jw(
+    const std::vector<uint32_t> &qubits, const MatrixXcd &orbital_coeffs
+)
 {
     std::vector<CircuitInstruction> instructions;
     size_t m = orbital_coeffs.rows();
@@ -102,8 +100,7 @@ std::vector<CircuitInstruction> prepare_slater_determinant_jw(const std::vector<
 
     instructions.reserve(m);
 
-    for (size_t i = 0; i < m; ++i)
-    {
+    for (size_t i = 0; i < m; ++i) {
         instructions.push_back({"x", {static_cast<unsigned int>(qubits[i])}, {}, {}});
     }
 
@@ -112,16 +109,17 @@ std::vector<CircuitInstruction> prepare_slater_determinant_jw(const std::vector<
 
     auto givens_rotation = givens_decomposition_slater(orbital_coeffs);
 
-    for (const auto& rotation : givens_rotation)
-    {
+    for (const auto &rotation : givens_rotation) {
         double c = round_for_acos(rotation.c);
         double theta = 2.0 * std::acos(c);
         double beta = std::arg(rotation.s) - 0.5 * M_PI;
-        instructions.push_back({"xx_plus_yy",
-                                {static_cast<unsigned int>(qubits[rotation.i]),
-                                 static_cast<unsigned int>(qubits[rotation.j])},
-                                {},
-                                {theta, beta}});
+        instructions.push_back(
+            {"xx_plus_yy",
+             {static_cast<unsigned int>(qubits[rotation.i]),
+              static_cast<unsigned int>(qubits[rotation.j])},
+             {},
+             {theta, beta}}
+        );
     }
     return instructions;
 }
@@ -148,39 +146,41 @@ class PrepareSlaterDeterminantJW
      */
     PrepareSlaterDeterminantJW(
         uint64_t norb,
-        const std::pair<std::vector<uint64_t>, std::vector<uint64_t>>& occupied_orbitals,
-        const std::optional<OrbitalRotation>& orbital_rotation, const std::vector<uint32_t>& qubits,
-        bool validate, double rtol, double atol)
-        : norb(norb), occupied_orbitals(occupied_orbitals), qubits(qubits)
+        const std::pair<std::vector<uint64_t>, std::vector<uint64_t>>
+            &occupied_orbitals,
+        const std::optional<OrbitalRotation> &orbital_rotation,
+        const std::vector<uint32_t> &qubits, bool validate, double rtol, double atol
+    )
+      : norb(norb), occupied_orbitals(occupied_orbitals), qubits(qubits)
     {
-        if (qubits.size() != 2 * norb)
-        {
+        if (qubits.size() != 2 * norb) {
             throw std::runtime_error("Qubits sizew must be equal to 2 * norb");
         }
 
-        if (orbital_rotation.has_value())
-        {
-            if (validate)
-            {
+        if (orbital_rotation.has_value()) {
+            if (validate) {
                 validate_orbital_rotation(orbital_rotation.value(), rtol, atol);
             }
-            if (orbital_rotation->type == OrbitalRotationType::Spinless)
-            {
+            if (orbital_rotation->type == OrbitalRotationType::Spinless) {
                 orbital_rotation_a_ = orbital_rotation.value().spinless;
                 orbital_rotation_b_ = orbital_rotation.value().spinless;
+            } else {
+                orbital_rotation_a_ = orbital_rotation.value().spinfull[0].value_or(
+                    MatrixXcd::Identity(
+                        static_cast<Index>(norb), static_cast<Index>(norb)
+                    )
+                );
+                orbital_rotation_b_ = orbital_rotation.value().spinfull[1].value_or(
+                    MatrixXcd::Identity(
+                        static_cast<Index>(norb), static_cast<Index>(norb)
+                    )
+                );
             }
-            else
-            {
-                orbital_rotation_a_ =
-                    orbital_rotation.value().spinfull[0].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
-                orbital_rotation_b_ =
-                    orbital_rotation.value().spinfull[1].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
-            }
-        }
-        else
-        {
-            orbital_rotation_a_ = MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb));
-            orbital_rotation_b_ = MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb));
+        } else {
+            orbital_rotation_a_ =
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb));
+            orbital_rotation_b_ =
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb));
         }
     }
 
@@ -192,36 +192,46 @@ class PrepareSlaterDeterminantJW
     std::vector<CircuitInstruction> instructions() const
     {
         uint64_t norb = qubits.size() / 2;
-        std::vector<uint32_t> alpha_qubits(qubits.begin(), qubits.begin() + static_cast<std::ptrdiff_t>(norb));
-        std::vector<uint32_t> beta_qubits(qubits.begin() + static_cast<std::ptrdiff_t>(norb), qubits.end());
+        std::vector<uint32_t> alpha_qubits(
+            qubits.begin(), qubits.begin() + static_cast<std::ptrdiff_t>(norb)
+        );
+        std::vector<uint32_t> beta_qubits(
+            qubits.begin() + static_cast<std::ptrdiff_t>(norb), qubits.end()
+        );
         std::vector<CircuitInstruction> instructions;
-        const auto& occ_a = occupied_orbitals.first;
-        const auto& occ_b = occupied_orbitals.second;
-        if (orbital_rotation_a_.isApprox(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)), 1e-12))
-        {
-            for (auto a : occ_a)
-            {
-                instructions.push_back({"x", {static_cast<unsigned int>(alpha_qubits[a])}, {}, {}});
+        const auto &occ_a = occupied_orbitals.first;
+        const auto &occ_b = occupied_orbitals.second;
+        if (orbital_rotation_a_.isApprox(
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)),
+                1e-12
+            )) {
+            for (auto a : occ_a) {
+                instructions.push_back(
+                    {"x", {static_cast<unsigned int>(alpha_qubits[a])}, {}, {}}
+                );
             }
-        }
-        else
-        {
+        } else {
             MatrixXcd orb_a_t = orbital_rotation_a_(all, occ_a).transpose();
             auto slater_instr_a = prepare_slater_determinant_jw(alpha_qubits, orb_a_t);
-            instructions.insert(instructions.end(), slater_instr_a.begin(), slater_instr_a.end());
+            instructions.insert(
+                instructions.end(), slater_instr_a.begin(), slater_instr_a.end()
+            );
         }
-        if (orbital_rotation_b_.isApprox(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)), 1e-12))
-        {
-            for (auto b : occ_b)
-            {
-                instructions.push_back({"x", {static_cast<unsigned int>(beta_qubits[b])}, {}, {}});
+        if (orbital_rotation_b_.isApprox(
+                MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)),
+                1e-12
+            )) {
+            for (auto b : occ_b) {
+                instructions.push_back(
+                    {"x", {static_cast<unsigned int>(beta_qubits[b])}, {}, {}}
+                );
             }
-        }
-        else
-        {
+        } else {
             MatrixXcd orb_b_t = orbital_rotation_b_(all, occ_b).transpose();
             auto slater_instr_b = prepare_slater_determinant_jw(beta_qubits, orb_b_t);
-            instructions.insert(instructions.end(), slater_instr_b.begin(), slater_instr_b.end());
+            instructions.insert(
+                instructions.end(), slater_instr_b.begin(), slater_instr_b.end()
+            );
         }
 
         return instructions;
@@ -232,14 +242,20 @@ class PrepareSlaterDeterminantJW
      * spin.
      * @return Mutable reference to the orbital rotation matrix for alpha spin
      */
-    MatrixXcd& orbital_rotation_a() { return orbital_rotation_a_; }
+    MatrixXcd &orbital_rotation_a()
+    {
+        return orbital_rotation_a_;
+    }
 
     /**
      * @brief Returns a mutable reference to the orbital rotation matrix for beta
      * spin.
      * @return Mutable reference to the orbital rotation matrix for beta spin
      */
-    MatrixXcd& orbital_rotation_b() { return orbital_rotation_b_; }
+    MatrixXcd &orbital_rotation_b()
+    {
+        return orbital_rotation_b_;
+    }
 
   private:
     uint64_t norb; ///< Number of spatial orbitals
@@ -266,7 +282,7 @@ class PrepareHatreeFockJW
      * @param nelec Number of electrons as a pair (alpha, beta)
      */
     PrepareHatreeFockJW(uint64_t norb, std::pair<uint64_t, uint64_t> nelec)
-        : norb(norb), nelec(nelec)
+      : norb(norb), nelec(nelec)
     {
     }
 
@@ -277,14 +293,16 @@ class PrepareHatreeFockJW
      * orbitals)
      * @return List of Jordan-Wigner-based circuit instructions
      */
-    std::vector<CircuitInstruction> instructions(const std::vector<uint32_t>& qubits) const
+    std::vector<CircuitInstruction>
+    instructions(const std::vector<uint32_t> &qubits) const
     {
         std::vector<uint64_t> n_alpha(nelec.first);
         std::iota(n_alpha.begin(), n_alpha.end(), 0);
         std::vector<uint64_t> n_beta(nelec.second);
         std::iota(n_beta.begin(), n_beta.end(), 0);
-        return PrepareSlaterDeterminantJW(norb, {n_alpha, n_beta}, std::nullopt, qubits, true, 1e-5,
-                                          1e-8)
+        return PrepareSlaterDeterminantJW(
+                   norb, {n_alpha, n_beta}, std::nullopt, qubits, true, 1e-5, 1e-8
+        )
             .instructions();
     }
 

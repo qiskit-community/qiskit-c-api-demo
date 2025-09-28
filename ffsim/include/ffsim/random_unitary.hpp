@@ -40,10 +40,8 @@ MatrixXcd random_unitary(int N)
     std::normal_distribution<double> dist(0.0, 1.0);
 
     MatrixXcd A = MatrixXcd::Zero(N, N);
-    for (int i = 0; i < N; ++i)
-    {
-        for (int j = 0; j < N; ++j)
-        {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
             A(i, j) = Complex(dist(gen), dist(gen));
         }
     }

@@ -109,8 +109,8 @@ struct GivensRotation
      * @param first_index First index involved
      * @param second_index Second index involved
      */
-    GivensRotation(double c, Complex s, size_t first_index, size_t second_index) : c(c), s(s), i(first_index), j(second_index) {
-    }
+    GivensRotation(double c, Complex s, size_t first_index, size_t second_index) : c(c), s(s), i(first_index), j(second_index) // NOLINT(bugprone-easily-swappable-parameters)
+    {}
 };
 
 /**

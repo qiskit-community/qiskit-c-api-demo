@@ -32,8 +32,7 @@
 #include "mpi.h"
 #include "sbd/sbd.h"
 
-struct SBD
-{
+struct SBD {
     int task_comm_size = 1;
     int adet_comm_size = 1;
     int bdet_comm_size = 1;
@@ -55,48 +54,39 @@ struct SBD
     std::string fcidumpfile = "";
 };
 
-SBD generate_sbd_data(int argc, char* argv[])
+SBD generate_sbd_data(int argc, char *argv[])
 {
     SBD sbd;
-    for (int i = 1; i < argc; i++)
-    {
-        if (std::string(argv[i]) == "--fcidump")
-        {
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--fcidump") {
             sbd.fcidumpfile = std::string(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--iteration")
-        {
+        if (std::string(argv[i]) == "--iteration") {
             sbd.max_it = std::atoi(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--block")
-        {
+        if (std::string(argv[i]) == "--block") {
             sbd.max_nb = std::atoi(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--tolerance")
-        {
+        if (std::string(argv[i]) == "--tolerance") {
             sbd.eps = std::atof(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--max_time")
-        {
+        if (std::string(argv[i]) == "--max_time") {
             sbd.max_time = std::atof(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--adet_comm_size")
-        {
+        if (std::string(argv[i]) == "--adet_comm_size") {
             sbd.adet_comm_size = std::atoi(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--bdet_comm_size")
-        {
+        if (std::string(argv[i]) == "--bdet_comm_size") {
             sbd.bdet_comm_size = std::atoi(argv[i + 1]);
             i++;
         }
-        if (std::string(argv[i]) == "--task_comm_size")
-        {
+        if (std::string(argv[i]) == "--task_comm_size") {
             sbd.task_comm_size = std::atoi(argv[i + 1]);
             i++;
         }
@@ -105,7 +95,8 @@ SBD generate_sbd_data(int argc, char* argv[])
 }
 
 // energy, occupancy
-std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD& sbd_data)
+std::tuple<double, std::vector<double>>
+sbd_main(const MPI_Comm &comm, const SBD &sbd_data)
 {
 
     double E = 0.0;
@@ -138,8 +129,7 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     base_comm_size = adet_comm_size * bdet_comm_size * task_comm_size;
     int h_comm_size = mpi_size / base_comm_size;
 
-    if (mpi_size != base_comm_size * h_comm_size)
-    {
+    if (mpi_size != base_comm_size * h_comm_size) {
         throw std::invalid_argument("communicator size is not appropriate");
     }
 
@@ -148,8 +138,7 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
      */
 
     sbd::FCIDump fcidump;
-    if (mpi_rank == 0)
-    {
+    if (mpi_rank == 0) {
         fcidump = sbd::LoadFCIDump(fcidumpfile);
     }
     sbd::MpiBcast(fcidump, 0, comm);
@@ -165,8 +154,7 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     std::vector<std::vector<size_t>> adet;
     std::vector<std::vector<size_t>> bdet;
 
-    if (mpi_rank == 0)
-    {
+    if (mpi_rank == 0) {
         adet = sbd::DecodeAlphaDets(adetfile, L);
         sbd::change_bitlength(1, adet, bit_length);
         sbd::sort_bitarray(adet);
@@ -183,13 +171,19 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     MPI_Comm h_comm;
     MPI_Comm b_comm;
     MPI_Comm t_comm;
-    sbd::TaskCommunicator(comm, h_comm_size, adet_comm_size, bdet_comm_size, task_comm_size, h_comm,
-                          b_comm, t_comm);
+    sbd::TaskCommunicator(
+        comm, h_comm_size, adet_comm_size, bdet_comm_size, task_comm_size, h_comm,
+        b_comm, t_comm
+    );
 
-    sbd::MakeHelpers(adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
-                     adet_comm_size, bdet_comm_size);
-    sbd::RemakeHelpers(adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
-                       adet_comm_size, bdet_comm_size);
+    sbd::MakeHelpers(
+        adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
+        adet_comm_size, bdet_comm_size
+    );
+    sbd::RemakeHelpers(
+        adet, bdet, bit_length, L, helper, sharedMemory, h_comm, b_comm, t_comm,
+        adet_comm_size, bdet_comm_size
+    );
 
     int mpi_rank_h;
     MPI_Comm_rank(h_comm, &mpi_rank_h);
@@ -208,25 +202,31 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
        Initialize/Load wave function
      */
     std::vector<double> W;
-    sbd::BasisInitVector(W, adet, bdet, adet_comm_size, bdet_comm_size, h_comm, b_comm, t_comm,
-                         init);
+    sbd::BasisInitVector(
+        W, adet, bdet, adet_comm_size, bdet_comm_size, h_comm, b_comm, t_comm, init
+    );
     /**
        Diagonalization
      */
     std::vector<double> hii;
     auto time_start_diag = std::chrono::high_resolution_clock::now();
-    sbd::makeQChamDiagTerms(adet, bdet, bit_length, L, helper, I0, I1, I2, hii, h_comm, b_comm,
-                            t_comm);
-    sbd::Davidson(hii, W, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
-                  bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm, max_it, max_nb, eps,
-                  max_time);
+    sbd::makeQChamDiagTerms(
+        adet, bdet, bit_length, L, helper, I0, I1, I2, hii, h_comm, b_comm, t_comm
+    );
+    sbd::Davidson(
+        hii, W, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
+        bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm, max_it, max_nb, eps,
+        max_time
+    );
     auto time_end_diag = std::chrono::high_resolution_clock::now();
-    auto elapsed_diag_count =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_end_diag - time_start_diag)
-            .count();
+    auto elapsed_diag_count = std::chrono::duration_cast<std::chrono::microseconds>(
+                                  time_end_diag - time_start_diag
+    )
+                                  .count();
     double elapsed_diag = 0.000001 * static_cast<double>(elapsed_diag_count);
     if (mpi_rank == 0)
-        std::cout << " Elapsed time for diagonalization " << elapsed_diag << " (sec) " << std::endl;
+        std::cout << " Elapsed time for diagonalization " << elapsed_diag << " (sec) "
+                  << std::endl;
 
     /**
          Evaluation of Hamiltonian expectation value
@@ -234,17 +234,17 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
 
     std::vector<double> C(W.size(), 0.0);
 
-    sbd::mult(hii, W, C, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
-              bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm);
+    sbd::mult(
+        hii, W, C, adet, bdet, bit_length, static_cast<size_t>(L), adet_comm_size,
+        bdet_comm_size, helper, I0, I1, I2, h_comm, b_comm, t_comm
+    );
 
     sbd::InnerProduct(W, C, E, b_comm);
 
-    if (energy_target != 0.0 && std::abs(E - energy_target) > energy_variance)
-    {
+    if (energy_target != 0.0 && std::abs(E - energy_target) > energy_variance) {
         E = 0.0;
     }
-    if (mpi_rank == 0)
-    {
+    if (mpi_rank == 0) {
         std::cout.precision(16);
         std::cout << " Energy = " << E << std::endl;
     }
@@ -261,18 +261,23 @@ std::tuple<double, std::vector<double>> sbd_main(const MPI_Comm& comm, const SBD
     std::vector<int> oIdx(o_size);
     std::iota(oIdx.begin(), oIdx.end(), o_start);
     std::vector<double> res_density;
-    sbd::OccupationDensity(oIdx, W, adet, bdet, bit_length, adet_comm_size, bdet_comm_size, b_comm,
-                           res_density);
+    sbd::OccupationDensity(
+        oIdx, W, adet, bdet, bit_length, adet_comm_size, bdet_comm_size, b_comm,
+        res_density
+    );
     std::vector<double> density_rank(static_cast<size_t>(2 * L), 0.0);
     std::vector<double> density_group(static_cast<size_t>(2 * L), 0.0);
     std::vector<double> density(static_cast<size_t>(2 * L), 0.0);
-    for (size_t io = o_start; io < o_end; io++)
-    {
+    for (size_t io = o_start; io < o_end; io++) {
         density_rank[2 * io] = res_density[2 * (io - o_start)];
         density_rank[2 * io + 1] = res_density[2 * (io - o_start) + 1];
     }
-    MPI_Allreduce(density_rank.data(), density_group.data(), 2 * L, MPI_DOUBLE, MPI_SUM, t_comm);
-    MPI_Allreduce(density_group.data(), density.data(), 2 * L, MPI_DOUBLE, MPI_SUM, h_comm);
+    MPI_Allreduce(
+        density_rank.data(), density_group.data(), 2 * L, MPI_DOUBLE, MPI_SUM, t_comm
+    );
+    MPI_Allreduce(
+        density_group.data(), density.data(), 2 * L, MPI_DOUBLE, MPI_SUM, h_comm
+    );
 
     FreeHelpers(helper);
     return {E, density};
