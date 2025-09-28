@@ -55,7 +55,7 @@ VectorXd orbital_rotation_to_parameters(const MatrixXcd& orbital_rotation, bool 
         }
     }
 
-    int norb = orbital_rotation.rows();
+    int norb = static_cast<int>(orbital_rotation.rows());
     std::vector<std::pair<uint64_t, uint64_t>> triu_indices_no_diag;
 
     for (int i = 0; i < norb; ++i)
@@ -73,7 +73,7 @@ VectorXd orbital_rotation_to_parameters(const MatrixXcd& orbital_rotation, bool 
     for (size_t idx = 0; idx < triu_indices_no_diag.size(); ++idx)
     {
         auto [i, j] = triu_indices_no_diag[idx];
-        params(idx) = mat(i, j).real();
+        params(static_cast<Index>(idx)) = mat(static_cast<Index>(i), static_cast<Index>(j)).real();
     }
 
     if (!real)
@@ -89,7 +89,7 @@ VectorXd orbital_rotation_to_parameters(const MatrixXcd& orbital_rotation, bool 
         for (size_t idx = 0; idx < triu_indices.size(); ++idx)
         {
             auto [i, j] = triu_indices[idx];
-            params(idx + triu_indices_no_diag.size()) = mat(i, j).imag();
+            params(static_cast<Index>(idx + triu_indices_no_diag.size())) = mat(static_cast<Index>(i), static_cast<Index>(j)).imag();
         }
     }
 
@@ -131,18 +131,18 @@ MatrixXcd orbital_rotation_from_parameters(const VectorXcd& params, int norb, bo
         for (size_t idx = 0; idx < triu_indices.size(); ++idx)
         {
             auto [i, j] = triu_indices[idx];
-            Complex imag_param_val = params[idx + triu_indices_no_diag.size()];
-            generator(i, j) = Complex(0.0, imag_param_val.real());
-            generator(j, i) = Complex(0.0, imag_param_val.real());
+            Complex imag_param_val = params[static_cast<Index>(idx + triu_indices_no_diag.size())];
+            generator(static_cast<Index>(i), static_cast<Index>(j)) = Complex(0.0, imag_param_val.real());
+            generator(static_cast<Index>(j), static_cast<Index>(i)) = Complex(0.0, imag_param_val.real());
         }
     }
 
     for (size_t idx = 0; idx < triu_indices_no_diag.size(); ++idx)
     {
         auto [i, j] = triu_indices_no_diag[idx];
-        Complex param_val = params[idx];
-        generator(i, j) += Complex(param_val.real(), 0.0);
-        generator(j, i) -= Complex(param_val.real(), 0.0);
+        Complex param_val = params[static_cast<Index>(idx)];
+        generator(static_cast<Index>(i), static_cast<Index>(j)) += Complex(param_val.real(), 0.0);
+        generator(static_cast<Index>(j), static_cast<Index>(i)) -= Complex(param_val.real(), 0.0);
     }
     return linalg::expm(generator);
 };
@@ -190,15 +190,21 @@ void validate_orbital_rotation(const OrbitalRotation& mat, double rtol, double a
     }
     else
     {
-        if (mat.spinfull[0].has_value() && !linalg::is_unitary(mat.spinfull[0].value(), rtol, atol))
+        if (const auto& matrix0_opt = mat.spinfull[0]; matrix0_opt.has_value())
         {
-            throw std::runtime_error(
-                "The input orbital rotation matrix for spin alpha was not unitary.");
+            if (!linalg::is_unitary(matrix0_opt.value(), rtol, atol))
+            {
+                throw std::runtime_error(
+                    "The input orbital rotation matrix for spin alpha was not unitary.");
+            }
         }
-        if (mat.spinfull[1].has_value() && !linalg::is_unitary(mat.spinfull[1].value(), rtol, atol))
+        if (const auto& matrix1_opt = mat.spinfull[1]; matrix1_opt.has_value())
         {
-            throw std::runtime_error(
-                "The input orbital rotation matrix for spin beta was not unitary.");
+            if (!linalg::is_unitary(matrix1_opt.value(), rtol, atol))
+            {
+                throw std::runtime_error(
+                    "The input orbital rotation matrix for spin beta was not unitary.");
+            }
         }
     }
 }

@@ -198,6 +198,6 @@ new ones.
 
 ## Contributing
 
-The source code is available [on GitHub].
+The source code is available [on GitHub](https://github.com/qiskit-community/qiskit-capi-demo).
 By participating, you are expected to uphold Qiskit's [code of conduct](https://github.com/Qiskit/qiskit/blob/main/CODE_OF_CONDUCT.md).
 

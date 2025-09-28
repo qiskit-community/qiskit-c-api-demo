@@ -38,7 +38,7 @@ jobs:
 
       - name: Run clang-format check
         run: |
-          fd '\.(cpp|hpp|h|c)$' src \
+          fd '\.(cpp|hpp|h|c)$' src ffsim/include/ffsim \
             --exec clang-format --dry-run -Werror
 
       - name: Configure CMake (for compile_commands.json)
@@ -46,5 +46,5 @@ jobs:
 
       - name: Run clang-tidy
         run: |
-          fd '\.(cpp|hpp|h|c)$' src \
+          fd '\.(cpp|hpp|h|c)$' src ffsim/include/ffsim \
             --exec-batch clang-tidy -p build --extra-arg=-Wno-error=missing-headers {} +

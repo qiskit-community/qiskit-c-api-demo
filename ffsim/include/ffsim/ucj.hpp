@@ -59,7 +59,7 @@ slater_determinant_instruction(const std::vector<uint32_t>& qubits, const size_t
 
     size_t nela = nelec.first;
 
-    MatrixXcd Kmat = MatrixXcd::Zero(norb, norb);
+    MatrixXcd Kmat = MatrixXcd::Zero(static_cast<Index>(norb), static_cast<Index>(norb));
     int idx = 0;
     for (int i = 0; i < nela; ++i)
     {
@@ -68,7 +68,7 @@ slater_determinant_instruction(const std::vector<uint32_t>& qubits, const size_t
             double real_part = params(idx++).real();
             double imag_part = params(idx++).real(); // assume params are all real
             std::complex<double> val(real_part, imag_part);
-            Kmat(i, j + nela) = val;
+            Kmat(static_cast<Index>(i), static_cast<Index>(j + nela)) = val;
         }
     }
 
@@ -257,7 +257,7 @@ hf_and_ucj_op_spin_balanced_jw(const std::vector<uint32_t>& qubits,
     {
         for (uint64_t j = 0; j < norb; ++j)
         {
-            orbital_rotation(i, j) =
+            orbital_rotation(static_cast<Index>(i), static_cast<Index>(j)) =
                 std::conj(ucj_op.orbital_rotations(0, static_cast<long>(j), static_cast<long>(i)));
         }
     }

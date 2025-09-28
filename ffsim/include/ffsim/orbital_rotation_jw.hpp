@@ -56,7 +56,7 @@ std::vector<CircuitInstruction> orbital_rotation_jw(const std::vector<uint32_t>&
 
     for (size_t i = 0; i < phase_shifts.size(); ++i)
     {
-        double theta = std::arg(phase_shifts(i));
+        double theta = std::arg(phase_shifts(static_cast<Index>(i)));
         instructions.push_back(
             {"rz", {static_cast<unsigned int>(qubits[i])}, {}, std::vector<double>{theta}});
     }
@@ -100,9 +100,9 @@ class OrbitalRotationJW
         else
         {
             orbital_rotation_a =
-                orbital_rotation.spinfull[0].value_or(MatrixXcd::Identity(norb, norb));
+                orbital_rotation.spinfull[0].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
             orbital_rotation_b =
-                orbital_rotation.spinfull[1].value_or(MatrixXcd::Identity(norb, norb));
+                orbital_rotation.spinfull[1].value_or(MatrixXcd::Identity(static_cast<Index>(norb), static_cast<Index>(norb)));
         }
     }
 
@@ -115,7 +115,7 @@ class OrbitalRotationJW
      */
     std::vector<CircuitInstruction> instructions(const std::vector<uint32_t>& qubits) const
     {
-        uint64_t norb_tmp = qubits.size() / 2;
+        auto norb_tmp = static_cast<std::ptrdiff_t>(qubits.size() / 2);
         std::vector<uint32_t> alpha_qubits(qubits.begin(), qubits.begin() + norb_tmp);
         std::vector<uint32_t> beta_qubits(qubits.begin() + norb_tmp, qubits.end());
 

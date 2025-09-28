@@ -183,10 +183,14 @@ struct UCJOpSpinBalanced
         validate_interaction_pairs(interaction_pairs[1], false);
 
         size_t n_triu = norb * (norb + 1) / 2;
-        size_t n_params_aa =
-            interaction_pairs[0].has_value() ? interaction_pairs[0]->size() : n_triu;
-        size_t n_params_ab =
-            interaction_pairs[1].has_value() ? interaction_pairs[1]->size() : n_triu;
+        size_t n_params_aa = n_triu;
+        if (const auto& pairs_aa_opt = interaction_pairs[0]; pairs_aa_opt.has_value()) {
+            n_params_aa = pairs_aa_opt.value().size();
+        }
+        size_t n_params_ab = n_triu;
+        if (const auto& pairs_ab_opt = interaction_pairs[1]; pairs_ab_opt.has_value()) {
+            n_params_ab = pairs_ab_opt.value().size();
+        }
 
         return n_reps * (n_params_aa + n_params_ab + norb * norb) +
                (with_final_orbital_rotation ? norb * norb : 0);
@@ -239,13 +243,13 @@ struct UCJOpSpinBalanced
         for (size_t rep = 0; rep < n_reps; ++rep)
         {
             MatrixXcd orbital_rotation =
-                orbital_rotation_from_parameters(params.segment(index, norb * norb), norb, false);
+                orbital_rotation_from_parameters(params.segment(static_cast<Index>(index), static_cast<Index>(norb * norb)), static_cast<int>(norb), false);
             index += norb * norb;
             for (int i = 0; i < norb; ++i)
             {
                 for (int j = 0; j < norb; ++j)
                 {
-                    orbital_rotations(rep, i, j) = orbital_rotation(i, j);
+                    orbital_rotations(static_cast<long>(rep), i, j) = orbital_rotation(i, j);
                 }
             }
             for (int t = 0; t < 2; ++t)
@@ -253,9 +257,9 @@ struct UCJOpSpinBalanced
                 const auto& pairs = (t == 0) ? pairs_aa : pairs_ab;
                 for (const auto& [i, j] : pairs)
                 {
-                    Complex val = params(index++);
-                    diag_coulomb_mats(rep, t, static_cast<long>(i), static_cast<long>(j)) = val;
-                    diag_coulomb_mats(rep, t, static_cast<long>(j), static_cast<long>(i)) = val;
+                    Complex val = params(static_cast<Index>(index++));
+                    diag_coulomb_mats(static_cast<long>(rep), t, static_cast<long>(i), static_cast<long>(j)) = val;
+                    diag_coulomb_mats(static_cast<long>(rep), t, static_cast<long>(j), static_cast<long>(i)) = val;
                 }
             }
         }
@@ -265,7 +269,7 @@ struct UCJOpSpinBalanced
         if (with_final_orbital_rotation)
         {
             final_orbital_rotation =
-                orbital_rotation_from_parameters(params.segment(index, norb * norb), norb, false);
+                orbital_rotation_from_parameters(params.segment(static_cast<Index>(index), static_cast<Index>(norb * norb)), static_cast<int>(norb), false);
         }
 
         return UCJOpSpinBalanced(diag_coulomb_mats, orbital_rotations, final_orbital_rotation, true,
@@ -309,7 +313,7 @@ struct UCJOpSpinBalanced
                     orb_rot(i, j) = orbital_rotations(rep, i, j);
                 }
             }
-            params.segment(index, norb * norb) = orbital_rotation_to_parameters(orb_rot, false);
+            params.segment(static_cast<Index>(index), static_cast<Index>(norb * norb)) = orbital_rotation_to_parameters(orb_rot, false);
             index += norb * norb;
 
             for (int t = 0; t < 2; ++t)
@@ -317,7 +321,7 @@ struct UCJOpSpinBalanced
                 const auto& pairs = (t == 0) ? pairs_aa : pairs_ab;
                 for (const auto& [i, j] : pairs)
                 {
-                    params(index++) =
+                    params(static_cast<Index>(index++)) =
                         diag_coulomb_mats(rep, t, static_cast<long>(i), static_cast<long>(j));
                 }
             }
@@ -325,7 +329,7 @@ struct UCJOpSpinBalanced
 
         if (final_orbital_rotation)
         {
-            params.segment(index, norb * norb) =
+            params.segment(static_cast<Index>(index), static_cast<Index>(norb * norb)) =
                 orbital_rotation_to_parameters(final_orbital_rotation.value(), false);
         }
 
@@ -359,10 +363,10 @@ struct UCJOpSpinBalanced
             linalg::double_factorized_t2(t2, tol, std::nullopt);
         size_t n_vecs = diag_coulomb_mats.size() / (norb * norb);
         size_t orb_vecs = orbital_rotations.size() / (norb * norb);
-        Eigen::DSizes<ptrdiff_t, 3> diag_shape_3d(n_vecs, static_cast<long>(norb),
-                                                  static_cast<long>(norb));
-        Eigen::DSizes<ptrdiff_t, 3> orb_shape_3d(orb_vecs, static_cast<long>(norb),
-                                                 static_cast<long>(norb));
+        Eigen::DSizes<ptrdiff_t, 3> diag_shape_3d(static_cast<ptrdiff_t>(n_vecs), static_cast<ptrdiff_t>(norb),
+                                                  static_cast<ptrdiff_t>(norb));
+        Eigen::DSizes<ptrdiff_t, 3> orb_shape_3d(static_cast<ptrdiff_t>(orb_vecs), static_cast<ptrdiff_t>(norb),
+                                                 static_cast<ptrdiff_t>(norb));
 
         Tensor<Complex, 3> diag_coulomb_mats_reshaped = diag_coulomb_mats.reshape(diag_shape_3d);
         Tensor<Complex, 3> orbital_rotations_reshaped = orbital_rotations.reshape(orb_shape_3d);
@@ -410,13 +414,13 @@ struct UCJOpSpinBalanced
         if (n_reps.has_value() && n_vecs < n_reps.value())
         {
             size_t pad = n_reps.value() - n_vecs;
-            Tensor<Complex, 4> diag_coulomb_mats_pad(pad, 2, static_cast<long>(norb),
+            Tensor<Complex, 4> diag_coulomb_mats_pad(static_cast<long>(pad), 2, static_cast<long>(norb),
                                                      static_cast<long>(norb));
             diag_coulomb_mats_pad.setZero();
             diag_coulomb_mats_stacked =
                 diag_coulomb_mats_stacked.concatenate(diag_coulomb_mats_pad, 0);
 
-            Tensor<Complex, 3> orbital_rotations_pad(pad, static_cast<long>(norb),
+            Tensor<Complex, 3> orbital_rotations_pad(static_cast<long>(pad), static_cast<long>(norb),
                                                      static_cast<long>(norb));
             orbital_rotations_pad.setZero();
             for (int p = 0; p < pad; ++p)
@@ -433,10 +437,10 @@ struct UCJOpSpinBalanced
         std::optional<MatrixXcd> final_orbital_rotation = std::nullopt;
         if (t1.has_value())
         {
-            MatrixXcd t1_mat = t1.value();
-            MatrixXcd final_orbital_rotation_generator = MatrixXcd::Zero(norb, norb);
-            final_orbital_rotation_generator.block(0, nocc, nocc, nvrt) = t1_mat;
-            final_orbital_rotation_generator.block(nocc, 0, nvrt, nocc) = -t1_mat.adjoint();
+            const MatrixXcd& t1_mat = t1.value();
+            MatrixXcd final_orbital_rotation_generator = MatrixXcd::Zero(static_cast<Index>(norb), static_cast<Index>(norb));
+            final_orbital_rotation_generator.block(0, static_cast<Index>(nocc), static_cast<Index>(nocc), static_cast<Index>(nvrt)) = t1_mat;
+            final_orbital_rotation_generator.block(static_cast<Index>(nocc), 0, static_cast<Index>(nvrt), static_cast<Index>(nocc)) = -t1_mat.adjoint();
             final_orbital_rotation = linalg::expm(final_orbital_rotation_generator);
         }
 
@@ -463,7 +467,7 @@ struct UCJOpSpinBalanced
                     {
                         if (!mask[i][j])
                         {
-                            tensor(v, index, i, j) = Complex(0.0, 0.0);
+                            tensor(v, static_cast<long>(index), i, j) = Complex(0.0, 0.0);
                         }
                     }
                 }

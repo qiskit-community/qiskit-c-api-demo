@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        // ===== MPI initialization =====
+    // ===== MPI initialization =====
     // This workflow assumes MPI. Request FUNNELED (only main thread calls MPI).
     int provided;
     int mpi_init_error = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);

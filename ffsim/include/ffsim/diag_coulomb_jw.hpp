@@ -99,9 +99,9 @@ class DiagCoulombEvolutionJW
             }
             else
             {
-                return std::make_tuple(mat.triple[0].value_or(MatrixXcd::Zero(norb, norb)),
-                                       mat.triple[1].value_or(MatrixXcd::Zero(norb, norb)),
-                                       mat.triple[2].value_or(MatrixXcd::Zero(norb, norb)));
+                return std::make_tuple(mat.triple[0].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))),
+                                       mat.triple[1].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))),
+                                       mat.triple[2].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))));
             }
         }();
 
@@ -110,26 +110,26 @@ class DiagCoulombEvolutionJW
             const auto& this_mat = (sigma == 0) ? mat_aa : mat_bb;
             for (size_t i = 0; i < norb; ++i)
             {
-                if (std::abs(this_mat(i, i).real()) > 1e-12 ||
-                    std::abs(this_mat(i, i).imag()) > 1e-12)
+                if (std::abs(this_mat(static_cast<Index>(i), static_cast<Index>(i)).real()) > 1e-12 ||
+                    std::abs(this_mat(static_cast<Index>(i), static_cast<Index>(i)).imag()) > 1e-12)
                 {
                     instructions.push_back(
                         {"rz",
                          {static_cast<unsigned int>(qubits[i + sigma * norb])},
                          {},
-                         std::vector<double>{-0.5 * this_mat(i, i).real() * time}});
+                         std::vector<double>{-0.5 * this_mat(static_cast<Index>(i), static_cast<Index>(i)).real() * time}});
                 }
                 for (size_t j = i + 1; j < norb; ++j)
                 {
-                    if (std::abs(this_mat(i, j).real()) > 1e-12 ||
-                        std::abs(this_mat(i, j).imag()) > 1e-12)
+                    if (std::abs(this_mat(static_cast<Index>(i), static_cast<Index>(j)).real()) > 1e-12 ||
+                        std::abs(this_mat(static_cast<Index>(i), static_cast<Index>(j)).imag()) > 1e-12)
                     {
                         instructions.push_back(
                             {"cp",
                              {static_cast<unsigned int>(qubits[i + sigma * norb]),
                               static_cast<unsigned int>(qubits[j + sigma * norb])},
                              {},
-                             std::vector<double>{-1.0 * this_mat(i, j).real() * time}});
+                             std::vector<double>{-1.0 * this_mat(static_cast<Index>(i), static_cast<Index>(j)).real() * time}});
                     }
                 }
             }
@@ -137,33 +137,33 @@ class DiagCoulombEvolutionJW
 
         for (size_t i = 0; i < norb; ++i)
         {
-            if (std::abs(mat_ab(i, i).real()) > 1e-12 || std::abs(mat_ab(i, i).imag()) > 1e-12)
+            if (std::abs(mat_ab(static_cast<Index>(i), static_cast<Index>(i)).real()) > 1e-12 || std::abs(mat_ab(static_cast<Index>(i), static_cast<Index>(i)).imag()) > 1e-12)
             {
                 instructions.push_back({"cp",
                                         {static_cast<unsigned int>(qubits[i]),
                                          static_cast<unsigned int>(qubits[i + norb])},
                                         {},
-                                        std::vector<double>{-1.0 * mat_ab(i, i).real() * time}});
+                                        std::vector<double>{-1.0 * mat_ab(static_cast<Index>(i), static_cast<Index>(i)).real() * time}});
             }
             for (size_t j = i + 1; j < norb; ++j)
             {
-                if (std::abs(mat_ab(i, j).real()) > 1e-12 || std::abs(mat_ab(i, j).imag()) > 1e-12)
+                if (std::abs(mat_ab(static_cast<Index>(i), static_cast<Index>(j)).real()) > 1e-12 || std::abs(mat_ab(static_cast<Index>(i), static_cast<Index>(j)).imag()) > 1e-12)
                 {
                     instructions.push_back(
                         {"cp",
                          {static_cast<unsigned int>(qubits[i]),
                           static_cast<unsigned int>(qubits[j + norb])},
                          {},
-                         std::vector<double>{-1.0 * mat_ab(i, j).real() * time}});
+                         std::vector<double>{-1.0 * mat_ab(static_cast<Index>(i), static_cast<Index>(j)).real() * time}});
                 }
-                if (std::abs(mat_ab(j, i).real()) > 1e-12 || std::abs(mat_ab(j, i).imag()) > 1e-12)
+                if (std::abs(mat_ab(static_cast<Index>(j), static_cast<Index>(i)).real()) > 1e-12 || std::abs(mat_ab(static_cast<Index>(j), static_cast<Index>(i)).imag()) > 1e-12)
                 {
                     instructions.push_back(
                         {"cp",
                          {static_cast<unsigned int>(qubits[j]),
                           static_cast<unsigned int>(qubits[i + norb])},
                          {},
-                         std::vector<double>{-1.0 * mat_ab(j, i).real() * time}});
+                         std::vector<double>{-1.0 * mat_ab(static_cast<Index>(j), static_cast<Index>(i)).real() * time}});
                 }
             }
         }
@@ -186,9 +186,9 @@ class DiagCoulombEvolutionJW
             }
             else
             {
-                return std::make_tuple(mat.triple[0].value_or(MatrixXcd::Zero(norb, norb)),
-                                       mat.triple[1].value_or(MatrixXcd::Zero(norb, norb)),
-                                       mat.triple[2].value_or(MatrixXcd::Zero(norb, norb)));
+                return std::make_tuple(mat.triple[0].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))),
+                                       mat.triple[1].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))),
+                                       mat.triple[2].value_or(MatrixXcd::Zero(static_cast<Eigen::Index>(norb), static_cast<Eigen::Index>(norb))));
             }
         }();
 
@@ -201,7 +201,7 @@ class DiagCoulombEvolutionJW
                 const MatrixXcd this_mat = (i < norb && j < norb)     ? mat_aa
                                            : (i >= norb && j >= norb) ? mat_bb
                                                                       : mat_ab;
-                const auto val = this_mat(i % norb, j % norb);
+                const auto val = this_mat(static_cast<Index>(i % norb), static_cast<Index>(j % norb));
                 if (std::abs(val.real()) > 1e-12 || std::abs(val.imag()) > 1e-12)
                 {
                     instructions.push_back({"rzz",

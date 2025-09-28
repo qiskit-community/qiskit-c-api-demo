@@ -56,6 +56,7 @@ std::vector<size_t> shifted_orbitals(uint64_t norb, const std::vector<size_t>& t
     std::iota(orbitals.begin(), orbitals.end(), 0);
 
     std::vector<std::pair<uint64_t, uint64_t>> values;
+    values.reserve(target_orbs.size());
 
     for (size_t i = 0; i < target_orbs.size(); ++i)
     {
@@ -66,7 +67,7 @@ std::vector<size_t> shifted_orbitals(uint64_t norb, const std::vector<size_t>& t
 
     for (const auto& [idx, val] : values)
     {
-        orbitals.insert(orbitals.begin() + idx, val);
+        orbitals.insert(orbitals.begin() + static_cast<std::ptrdiff_t>(idx), val);
     }
 
     return orbitals;
@@ -90,6 +91,7 @@ std::vector<int64_t> make_strings(const std::vector<size_t>& orb_list, size_t ne
         if (nelec == 1)
         {
             std::vector<int64_t> res;
+            res.reserve(orb_list.size());
             for (auto i : orb_list)
                 res.push_back(1LL << i);
             return res;
@@ -131,7 +133,7 @@ std::vector<size_t> zero_one_subspace_indices(uint64_t norb, size_t nocc,
     size_t n00 = binomial(norb - 2, nocc);
     size_t n11 = (nocc >= 2) ? binomial(norb - 2, nocc - 2) : 0;
 
-    return std::vector<size_t>(indices.begin() + n00, indices.end() - n11);
+    return std::vector<size_t>(indices.begin() + static_cast<std::ptrdiff_t>(n00), indices.end() - static_cast<std::ptrdiff_t>(n11));
 }
 
 std::vector<size_t> one_subspace_indices(uint64_t norb, size_t nocc,
@@ -151,7 +153,7 @@ std::vector<size_t> one_subspace_indices(uint64_t norb, size_t nocc,
         n0 -= binomial(norb - target_orbs.size(), nocc - target_orbs.size());
     }
 
-    return std::vector<size_t>(indices.begin() + n0, indices.end());
+    return std::vector<size_t>(indices.begin() + static_cast<std::ptrdiff_t>(n0), indices.end());
 }
 
 /**
@@ -160,7 +162,7 @@ std::vector<size_t> one_subspace_indices(uint64_t norb, size_t nocc,
  * - Spinless: One matrix for both spin-up and spin-down orbitals.
  * - Spinfull: Separate matrices for spin-up and spin-down orbitals.
  */
-enum class OrbitalRotationType
+enum class OrbitalRotationType : std::uint8_t
 {
     Spinless, ///< Shared matrix for both spin components.
     Spinfull  ///< Separate matrices for each spin component.
@@ -172,7 +174,7 @@ enum class OrbitalRotationType
  * - Spinless: One spin sector.
  * - Spinfull: Two separate spin sectors.
  */
-enum class ElectronType
+enum class ElectronType : std::uint8_t
 {
     Spinless, ///< Single spin type.
     Spinfull, ///< Spin-resolved.
@@ -215,13 +217,13 @@ get_givens_decomposition(const OrbitalRotation& mat)
     else
     {
         std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>> decomp_a, decomp_b;
-        if (mat.spinfull[0].has_value())
+        if (const auto& opt_mat_0 = mat.spinfull[0]; opt_mat_0.has_value())
         {
-            decomp_a = linalg::givens_decomposition(mat.spinfull[0].value());
+            decomp_a = linalg::givens_decomposition(opt_mat_0.value());
         }
-        if (mat.spinfull[1].has_value())
+        if (const auto& opt_mat_1 = mat.spinfull[1]; opt_mat_1.has_value())
         {
-            decomp_b = linalg::givens_decomposition(mat.spinfull[1].value());
+            decomp_b = linalg::givens_decomposition(opt_mat_1.value());
         }
         return {decomp_a, decomp_b};
     }
@@ -231,7 +233,7 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
                                     const std::vector<size_t>& slice1,
                                     const std::vector<size_t>& slice2)
 {
-    int dim_b = vec.cols();
+    auto dim_b = vec.cols();
     double s_abs = std::abs(s);
     double angle = std::arg(s);
     Complex phase(std::cos(angle), std::sin(angle));
@@ -241,8 +243,8 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
     {
         size_t i = slice1[k];
         size_t j = slice2[k];
-        VectorXcd row_i = vec.row(i);
-        VectorXcd row_j = vec.row(j);
+        VectorXcd row_i = vec.row(static_cast<Eigen::Index>(i));
+        VectorXcd row_j = vec.row(static_cast<Eigen::Index>(j));
 
         // altanative method: zscal -> zdrot -> zscal
         row_i *= phase_conj;
@@ -255,8 +257,8 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
         }
 
         row_i *= phase;
-        vec.row(i) = row_i;
-        vec.row(j) = row_j;
+        vec.row(static_cast<Eigen::Index>(i)) = row_i;
+        vec.row(static_cast<Eigen::Index>(j)) = row_j;
     }
 }
 
@@ -270,8 +272,8 @@ void apply_orbital_rotation_adjacent_spin_inplace(MatrixXcd& vec, double c, Comp
 
     std::vector<size_t> indices = one_subspace_indices(norb, nelec, {i, j});
     size_t half = indices.size() / 2;
-    std::vector<size_t> silce1(indices.begin(), indices.begin() + half);
-    std::vector<size_t> slice2(indices.begin() + half, indices.end());
+    std::vector<size_t> silce1(indices.begin(), indices.begin() + static_cast<std::ptrdiff_t>(half));
+    std::vector<size_t> slice2(indices.begin() + static_cast<std::ptrdiff_t>(half), indices.end());
     apply_givens_rotation_in_place(vec, c, s, silce1, slice2);
 }
 
@@ -292,7 +294,7 @@ VectorXcd apply_orbital_rotation_spinless(VectorXcd& vec, const MatrixXcd& mat, 
     for (size_t i = 0; i < phase_shifts.size(); ++i)
     {
         auto indices = one_subspace_indices(norb, nelec, {i});
-        apply_phase_shift_in_place(reshaped, phase_shifts(i), indices);
+        apply_phase_shift_in_place(reshaped, phase_shifts(static_cast<Eigen::Index>(i)), indices);
     }
 
     return Map<VectorXcd>(reshaped.data(), vec.size());
@@ -309,7 +311,7 @@ VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
     size_t dim_b = binomial(norb, n_beta);
 
     MatrixXcd reshaped = vec;
-    reshaped.resize(dim_a, dim_b);
+    reshaped.resize(static_cast<Eigen::Index>(dim_a), static_cast<Eigen::Index>(dim_b));
 
     OrbitalRotation rot;
     rot.type = OrbitalRotationType::Spinfull;
@@ -329,7 +331,7 @@ VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
         for (size_t i = 0; i < phase_shifts_a.size(); ++i)
         {
             auto indices = one_subspace_indices(norb, n_alpha, {i});
-            apply_phase_shift_in_place(reshaped, phase_shifts_a(i), indices);
+            apply_phase_shift_in_place(reshaped, phase_shifts_a(static_cast<Eigen::Index>(i)), indices);
         }
     }
     if (decomp_b)
@@ -345,7 +347,7 @@ VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
         for (size_t i = 0; i < phase_shifts_b.size(); ++i)
         {
             auto indices = one_subspace_indices(norb, n_beta, {i});
-            apply_phase_shift_in_place(transposed, phase_shifts_b(i), indices);
+            apply_phase_shift_in_place(transposed, phase_shifts_b(static_cast<Eigen::Index>(i)), indices);
         }
         reshaped = transposed.transpose();
     }
@@ -410,6 +412,7 @@ std::vector<std::vector<size_t>> gen_occslst(const std::vector<size_t>& orb_list
         if (n == 1)
         {
             std::vector<std::vector<size_t>> res;
+            res.reserve(list.size());
             for (auto i : list)
             {
                 res.push_back({i});

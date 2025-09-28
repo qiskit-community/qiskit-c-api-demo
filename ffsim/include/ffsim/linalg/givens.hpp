@@ -16,6 +16,7 @@
 #define GIVENS_HPP
 
 #include <Eigen/Dense>
+#include <cassert>
 #include <complex>
 #include <vector>
 
@@ -79,7 +80,7 @@ std::tuple<double, Complex, Complex> zrotg(Complex ca, Complex cb);
  */
 inline void zrot(VectorXcd& x, VectorXcd& y, double c, Complex s)
 {
-    int n = std::min(x.size(), y.size());
+    int n = static_cast<int>(std::min(x.size(), y.size()));
     for (int i = 0; i < n; ++i)
     {
         Complex temp = c * x[i] + s * y[i];
@@ -105,10 +106,11 @@ struct GivensRotation
      * @brief Constructs a Givens rotation object.
      * @param c Cosine coefficient
      * @param s Sine coefficient
-     * @param i First index involved
-     * @param j Second index involved
+     * @param first_index First index involved
+     * @param second_index Second index involved
      */
-    GivensRotation(double c, Complex s, size_t i, size_t j) : c(c), s(s), i(i), j(j) {}
+    GivensRotation(double c, Complex s, size_t first_index, size_t second_index) : c(c), s(s), i(first_index), j(second_index) {
+    }
 };
 
 /**
@@ -130,7 +132,7 @@ struct GivensRotation
 
 std::pair<std::vector<GivensRotation>, VectorXcd> givens_decomposition(const MatrixXcd& mat)
 {
-    int n = mat.rows();
+    int n = static_cast<int>(mat.rows());
     MatrixXcd current_matrix = mat;
 
     std::vector<GivensRotation> left_rotations;
@@ -184,23 +186,23 @@ std::pair<std::vector<GivensRotation>, VectorXcd> givens_decomposition(const Mat
     for (const auto& rot : left_rotations)
     {
         double c = rot.c;
-        Complex s = std::conj(rot.s) * current_matrix(rot.i, rot.i);
-        auto [new_c, new_s, _] = zrotg(c * current_matrix(rot.j, rot.j), s);
+        Complex s = std::conj(rot.s) * current_matrix(static_cast<Index>(rot.i), static_cast<Index>(rot.i));
+        auto [new_c, new_s, _] = zrotg(c * current_matrix(static_cast<Index>(rot.j), static_cast<Index>(rot.j)), s);
         right_rotations.emplace_back(new_c, -std::conj(new_s), rot.i, rot.j);
 
         Matrix2cd givens_mat;
         givens_mat << new_c, -new_s, std::conj(new_s), new_c;
-        givens_mat(0, 0) *= current_matrix(rot.i, rot.i);
-        givens_mat(1, 0) *= current_matrix(rot.i, rot.i);
-        givens_mat(0, 1) *= current_matrix(rot.j, rot.j);
-        givens_mat(1, 1) *= current_matrix(rot.j, rot.j);
+        givens_mat(0, 0) *= current_matrix(static_cast<Index>(rot.i), static_cast<Index>(rot.i));
+        givens_mat(1, 0) *= current_matrix(static_cast<Index>(rot.i), static_cast<Index>(rot.i));
+        givens_mat(0, 1) *= current_matrix(static_cast<Index>(rot.j), static_cast<Index>(rot.j));
+        givens_mat(1, 1) *= current_matrix(static_cast<Index>(rot.j), static_cast<Index>(rot.j));
 
         auto [c2, s2, _2] = zrotg(givens_mat(1, 1), givens_mat(1, 0));
         Matrix2cd givens_mat2;
         givens_mat2 << c2, s2, -std::conj(s2), c2;
         Matrix2cd final_mat = givens_mat * givens_mat2;
-        current_matrix(rot.i, rot.i) = final_mat(0, 0);
-        current_matrix(rot.j, rot.j) = final_mat(1, 1);
+        current_matrix(static_cast<Index>(rot.i), static_cast<Index>(rot.i)) = final_mat(0, 0);
+        current_matrix(static_cast<Index>(rot.j), static_cast<Index>(rot.j)) = final_mat(1, 1);
     }
     return {right_rotations, current_matrix.diagonal()};
 }
