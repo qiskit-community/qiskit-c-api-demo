@@ -62,11 +62,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y g++ clang cmake ninja-build \
             libopenblas-dev liblapack-dev libeigen3-dev \
-            libopenmpi-dev openmpi-bin
+            libopenmpi-dev openmpi-bin libomp-dev
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install eigen open-mpi
+          brew install eigen open-mpi libomp
       - name: Clone submodules
         run: git submodule update --init --recursive
       - name: Build qiskit
