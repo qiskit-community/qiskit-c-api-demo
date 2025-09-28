@@ -51,6 +51,16 @@ jobs:
           sudo apt-get install -y g++ clang cmake ninja-build \
             libopenblas-dev liblapack-dev libeigen3-dev \
             libopenmpi-dev openmpi-bin
+      - name: Clone submodules
+        run: git submodule update --init --recursive
+      - name: Build qiskit
+        run: |
+          cd deps/qiskit
+          make c
+      - name: Build qrmi
+        run: |
+          cd deps/qrmi
+          cargo build --release
       - name: Configure CMake
         run: >-
           cmake -S . -B build

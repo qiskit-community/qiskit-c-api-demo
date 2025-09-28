@@ -36,9 +36,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install gcovr
-      - name: Configure CMake
-        run: cmake -S . -B build -G Ninja -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
-
+      - name: Clone submodules
+        run: git submodule update --init --recursive
+      - name: Build qiskit
+        run: |
+          cd deps/qiskit
+          make c
+      - name: Build qrmi
+        run: |
+          cd deps/qrmi
+          cargo build --release
       - name: Build
         run: ninja -C build
 
