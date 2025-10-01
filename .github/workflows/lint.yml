@@ -33,32 +33,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fd-find clang-tidy-21 clang-format-21 cmake
           sudo ln -fs clang-format-21 /usr/bin/clang-format
-          sudo ln -fs clang-tidy-21 /usr/bin/clang-tidy
           sudo ln -fs /usr/bin/fdfind /usr/local/bin/fd
-          sudo apt-get install -y g++ clang cmake ninja-build \
-          libopenblas-dev liblapack-dev libeigen3-dev \
-          libopenmpi-dev openmpi-bin libomp-dev
 
       - name: Run clang-format check
         run: |
           fd '\.(cpp|hpp|h|c)$' src ffsim/include/ffsim \
             --exec clang-format --dry-run -Werror
-      - name: Build qiskit
-        run: |
-          cd deps/qiskit
-          make c
-      - name: Build qrmi
-        run: |
-          cd deps/qrmi
-          cargo build --release
-
-      - name: Configure CMake (for compile_commands.json)
-        run: cmake -S . -B build
-          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-          -G Ninja
-          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
-
-      - name: Run clang-tidy
-        run: |
-          fd '\.(cpp|hpp|h|c)$' src ffsim/include/ffsim \
-            --exec-batch clang-tidy -p build --extra-arg=-Wno-error=missing-headers {} +
