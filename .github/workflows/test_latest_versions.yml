@@ -77,8 +77,18 @@ jobs:
         run: |
           cd deps/qrmi
           cargo build --release
-      - name: Configure CMake
+      - name: Configure CMake (Linux)
+        if: runner.os == 'Linux'
         run: >-
+          cmake -S . -B build
+          -G Ninja
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+          ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
+          ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+      - name: Configure CMake (macOS)
+        if: runner.os == 'macOS'
+        run: >
           cmake -S . -B build
           -G Ninja
           -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
