@@ -42,15 +42,15 @@ std::size_t binomial(std::size_t n, std::size_t k)
         k = n - k;
 
     std::size_t result = 1;
-    for (std::size_t i = 1; i <= k; ++i)
-    {
+    for (std::size_t i = 1; i <= k; ++i) {
         result *= (n - k + i);
         result /= i;
     }
     return result;
 }
 
-std::vector<size_t> shifted_orbitals(uint64_t norb, const std::vector<size_t>& target_orbs)
+std::vector<size_t>
+shifted_orbitals(uint64_t norb, const std::vector<size_t> &target_orbs)
 {
     std::vector<size_t> orbitals(norb - target_orbs.size());
     std::iota(orbitals.begin(), orbitals.end(), 0);
@@ -58,56 +58,47 @@ std::vector<size_t> shifted_orbitals(uint64_t norb, const std::vector<size_t>& t
     std::vector<std::pair<uint64_t, uint64_t>> values;
     values.reserve(target_orbs.size());
 
-    for (size_t i = 0; i < target_orbs.size(); ++i)
-    {
+    for (size_t i = 0; i < target_orbs.size(); ++i) {
         values.emplace_back(target_orbs[i], norb - target_orbs.size() + i);
     }
 
     std::sort(values.begin(), values.end());
 
-    for (const auto& [idx, val] : values)
-    {
+    for (const auto &[idx, val] : values) {
         orbitals.insert(orbitals.begin() + static_cast<std::ptrdiff_t>(idx), val);
     }
 
     return orbitals;
 }
 
-std::vector<int64_t> make_strings(const std::vector<size_t>& orb_list, size_t nelec)
+std::vector<int64_t> make_strings(const std::vector<size_t> &orb_list, size_t nelec)
 {
     assert(orb_list.size() < 64);
-    if (nelec == 0)
-    {
+    if (nelec == 0) {
         return {0};
-    }
-    else if (nelec > orb_list.size())
-    {
+    } else if (nelec > orb_list.size()) {
         return {};
     }
 
-    std::function<std::vector<int64_t>(const std::vector<size_t>&, size_t)> gen_str_iter =
-        [&](const std::vector<size_t>& orb_list, size_t nelec) -> std::vector<int64_t>
-    {
-        if (nelec == 1)
-        {
+    std::function<std::vector<int64_t>(const std::vector<size_t> &, size_t)>
+        gen_str_iter = [&](const std::vector<size_t> &orb_list,
+                           size_t nelec) -> std::vector<int64_t> {
+        if (nelec == 1) {
             std::vector<int64_t> res;
             res.reserve(orb_list.size());
             for (auto i : orb_list)
                 res.push_back(1LL << i);
             return res;
-        }
-        else if (nelec >= orb_list.size())
-        {
+        } else if (nelec >= orb_list.size()) {
             int64_t sum = 0;
             for (auto i : orb_list)
                 sum |= (1LL << i);
             return {sum};
-        }
-        else
-        {
-            std::vector<int64_t> res = gen_str_iter({orb_list.begin(), orb_list.end() - 1}, nelec);
-            for (auto n : gen_str_iter({orb_list.begin(), orb_list.end() - 1}, nelec - 1))
-            {
+        } else {
+            std::vector<int64_t> res =
+                gen_str_iter({orb_list.begin(), orb_list.end() - 1}, nelec);
+            for (auto n :
+                 gen_str_iter({orb_list.begin(), orb_list.end() - 1}, nelec - 1)) {
                 res.push_back(n | (1LL << orb_list.back()));
             }
             return res;
@@ -119,41 +110,48 @@ std::vector<int64_t> make_strings(const std::vector<size_t>& orb_list, size_t ne
     return strings;
 }
 
-std::vector<size_t> zero_one_subspace_indices(uint64_t norb, size_t nocc,
-                                              const std::vector<size_t>& target_orbs)
+std::vector<size_t> zero_one_subspace_indices(
+    uint64_t norb, size_t nocc, const std::vector<size_t> &target_orbs
+)
 {
     std::vector<size_t> orbitals = shifted_orbitals(norb, target_orbs);
     std::vector<int64_t> strings = make_strings(orbitals, nocc);
 
     std::vector<size_t> indices(strings.size());
     std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [&](size_t i, size_t j) { return strings[i] < strings[j]; });
+    std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+        return strings[i] < strings[j];
+    });
 
     size_t n00 = binomial(norb - 2, nocc);
     size_t n11 = (nocc >= 2) ? binomial(norb - 2, nocc - 2) : 0;
 
-    return std::vector<size_t>(indices.begin() + static_cast<std::ptrdiff_t>(n00), indices.end() - static_cast<std::ptrdiff_t>(n11));
+    return std::vector<size_t>(
+        indices.begin() + static_cast<std::ptrdiff_t>(n00),
+        indices.end() - static_cast<std::ptrdiff_t>(n11)
+    );
 }
 
-std::vector<size_t> one_subspace_indices(uint64_t norb, size_t nocc,
-                                         const std::vector<size_t>& target_orbs)
+std::vector<size_t>
+one_subspace_indices(uint64_t norb, size_t nocc, const std::vector<size_t> &target_orbs)
 {
     std::vector<size_t> orbitals = shifted_orbitals(norb, target_orbs);
     std::vector<int64_t> strings = make_strings(orbitals, nocc);
 
     std::vector<size_t> indices(strings.size());
     std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [&](size_t i, size_t j) { return strings[i] < strings[j]; });
+    std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+        return strings[i] < strings[j];
+    });
 
     size_t n0 = binomial(norb, nocc);
-    if (nocc >= target_orbs.size())
-    {
+    if (nocc >= target_orbs.size()) {
         n0 -= binomial(norb - target_orbs.size(), nocc - target_orbs.size());
     }
 
-    return std::vector<size_t>(indices.begin() + static_cast<std::ptrdiff_t>(n0), indices.end());
+    return std::vector<size_t>(
+        indices.begin() + static_cast<std::ptrdiff_t>(n0), indices.end()
+    );
 }
 
 /**
@@ -162,8 +160,7 @@ std::vector<size_t> one_subspace_indices(uint64_t norb, size_t nocc,
  * - Spinless: One matrix for both spin-up and spin-down orbitals.
  * - Spinfull: Separate matrices for spin-up and spin-down orbitals.
  */
-enum class OrbitalRotationType : std::uint8_t
-{
+enum class OrbitalRotationType : std::uint8_t {
     Spinless, ///< Shared matrix for both spin components.
     Spinfull  ///< Separate matrices for each spin component.
 };
@@ -174,8 +171,7 @@ enum class OrbitalRotationType : std::uint8_t
  * - Spinless: One spin sector.
  * - Spinfull: Two separate spin sectors.
  */
-enum class ElectronType : std::uint8_t
-{
+enum class ElectronType : std::uint8_t {
     Spinless, ///< Single spin type.
     Spinfull, ///< Spin-resolved.
 };
@@ -186,8 +182,7 @@ enum class ElectronType : std::uint8_t
  * Represents either a single orbital rotation matrix (`spinless`)
  * or two matrices for alpha and beta (`spinfull`).
  */
-struct OrbitalRotation
-{
+struct OrbitalRotation {
     OrbitalRotationType type; ///< Indicates if the rotation is spinfull or spinless.
     MatrixXcd spinless;       ///< Orbital rotation matrix for spinless case.
     std::array<std::optional<MatrixXcd>, 2> spinfull; ///< [0]: alpha, [1]: beta
@@ -198,40 +193,38 @@ struct OrbitalRotation
  *
  * Indicates the number of electrons per spin channel.
  */
-struct Electron
-{
-    ElectronType type;                      ///< Spinless or spinfull electron setting.
-    size_t spinless;                        ///< Number of electrons for spinless case.
-    std::pair<uint64_t, uint64_t> spinfull; ///< (alpha, beta) electron counts for spinfull.
+struct Electron {
+    ElectronType type; ///< Spinless or spinfull electron setting.
+    size_t spinless;   ///< Number of electrons for spinless case.
+    std::pair<uint64_t, uint64_t>
+        spinfull; ///< (alpha, beta) electron counts for spinfull.
 };
 
-std::pair<std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>>,
-          std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>>>
-get_givens_decomposition(const OrbitalRotation& mat)
+std::pair<
+    std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>>,
+    std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>>>
+get_givens_decomposition(const OrbitalRotation &mat)
 {
-    if (mat.type == OrbitalRotationType::Spinless)
-    {
+    if (mat.type == OrbitalRotationType::Spinless) {
         auto decomp = linalg::givens_decomposition(mat.spinless);
         return {decomp, decomp};
-    }
-    else
-    {
-        std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>> decomp_a, decomp_b;
-        if (const auto& opt_mat_0 = mat.spinfull[0]; opt_mat_0.has_value())
-        {
+    } else {
+        std::optional<std::pair<std::vector<linalg::GivensRotation>, VectorXcd>>
+            decomp_a, decomp_b;
+        if (const auto &opt_mat_0 = mat.spinfull[0]; opt_mat_0.has_value()) {
             decomp_a = linalg::givens_decomposition(opt_mat_0.value());
         }
-        if (const auto& opt_mat_1 = mat.spinfull[1]; opt_mat_1.has_value())
-        {
+        if (const auto &opt_mat_1 = mat.spinfull[1]; opt_mat_1.has_value()) {
             decomp_b = linalg::givens_decomposition(opt_mat_1.value());
         }
         return {decomp_a, decomp_b};
     }
 }
 
-void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
-                                    const std::vector<size_t>& slice1,
-                                    const std::vector<size_t>& slice2)
+void apply_givens_rotation_in_place(
+    MatrixXcd &vec, double c, Complex s, const std::vector<size_t> &slice1,
+    const std::vector<size_t> &slice2
+)
 {
     auto dim_b = vec.cols();
     double s_abs = std::abs(s);
@@ -239,8 +232,7 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
     Complex phase(std::cos(angle), std::sin(angle));
     Complex phase_conj = std::conj(phase);
 
-    for (size_t k = 0; k < slice1.size(); ++k)
-    {
+    for (size_t k = 0; k < slice1.size(); ++k) {
         size_t i = slice1[k];
         size_t j = slice2[k];
         VectorXcd row_i = vec.row(static_cast<Eigen::Index>(i));
@@ -249,8 +241,7 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
         // altanative method: zscal -> zdrot -> zscal
         row_i *= phase_conj;
 
-        for (int n = 0; n < dim_b; ++n)
-        {
+        for (int n = 0; n < dim_b; ++n) {
             Complex temp = c * row_i[n] + s_abs * row_j[n];
             row_j[n] = c * row_j[n] - s_abs * row_i[n];
             row_i[n] = temp;
@@ -262,9 +253,10 @@ void apply_givens_rotation_in_place(MatrixXcd& vec, double c, Complex s,
     }
 }
 
-void apply_orbital_rotation_adjacent_spin_inplace(MatrixXcd& vec, double c, Complex s,
-                                                  const std::pair<uint64_t, uint64_t>& target_orbs,
-                                                  uint64_t norb, size_t nelec)
+void apply_orbital_rotation_adjacent_spin_inplace(
+    MatrixXcd &vec, double c, Complex s,
+    const std::pair<uint64_t, uint64_t> &target_orbs, uint64_t norb, size_t nelec
+)
 {
     size_t i = target_orbs.first;
     size_t j = target_orbs.second;
@@ -272,37 +264,44 @@ void apply_orbital_rotation_adjacent_spin_inplace(MatrixXcd& vec, double c, Comp
 
     std::vector<size_t> indices = one_subspace_indices(norb, nelec, {i, j});
     size_t half = indices.size() / 2;
-    std::vector<size_t> silce1(indices.begin(), indices.begin() + static_cast<std::ptrdiff_t>(half));
-    std::vector<size_t> slice2(indices.begin() + static_cast<std::ptrdiff_t>(half), indices.end());
+    std::vector<size_t> silce1(
+        indices.begin(), indices.begin() + static_cast<std::ptrdiff_t>(half)
+    );
+    std::vector<size_t> slice2(
+        indices.begin() + static_cast<std::ptrdiff_t>(half), indices.end()
+    );
     apply_givens_rotation_in_place(vec, c, s, silce1, slice2);
 }
 
-VectorXcd apply_orbital_rotation_spinless(VectorXcd& vec, const MatrixXcd& mat, uint64_t norb,
-                                          size_t nelec)
+VectorXcd apply_orbital_rotation_spinless(
+    VectorXcd &vec, const MatrixXcd &mat, uint64_t norb, size_t nelec
+)
 {
     auto [rotations, phase_shifts] = linalg::givens_decomposition(mat);
     MatrixXcd reshaped = vec;
     reshaped.resize(vec.size(), 1);
 
-    for (const auto& rotation : rotations)
-    {
-        apply_orbital_rotation_adjacent_spin_inplace(reshaped, rotation.c, std::conj(rotation.s),
-                                                     std::make_pair(rotation.i, rotation.j), norb,
-                                                     nelec);
+    for (const auto &rotation : rotations) {
+        apply_orbital_rotation_adjacent_spin_inplace(
+            reshaped, rotation.c, std::conj(rotation.s),
+            std::make_pair(rotation.i, rotation.j), norb, nelec
+        );
     }
 
-    for (size_t i = 0; i < phase_shifts.size(); ++i)
-    {
+    for (size_t i = 0; i < phase_shifts.size(); ++i) {
         auto indices = one_subspace_indices(norb, nelec, {i});
-        apply_phase_shift_in_place(reshaped, phase_shifts(static_cast<Eigen::Index>(i)), indices);
+        apply_phase_shift_in_place(
+            reshaped, phase_shifts(static_cast<Eigen::Index>(i)), indices
+        );
     }
 
     return Map<VectorXcd>(reshaped.data(), vec.size());
 }
 
-VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
-                                          const std::array<std::optional<MatrixXcd>, 2>& mat,
-                                          uint64_t norb, const std::pair<uint64_t, uint64_t>& nelec)
+VectorXcd apply_orbital_rotation_spinfull(
+    VectorXcd &vec, const std::array<std::optional<MatrixXcd>, 2> &mat, uint64_t norb,
+    const std::pair<uint64_t, uint64_t> &nelec
+)
 {
 
     size_t n_alpha = nelec.first;
@@ -319,35 +318,35 @@ VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
 
     auto [decomp_a, decomp_b] = get_givens_decomposition(rot);
 
-    if (decomp_a)
-    {
-        auto& [rots_a, phase_shifts_a] = *decomp_a;
-        for (const auto& rotation : rots_a)
-        {
+    if (decomp_a) {
+        auto &[rots_a, phase_shifts_a] = *decomp_a;
+        for (const auto &rotation : rots_a) {
             apply_orbital_rotation_adjacent_spin_inplace(
-                reshaped, rotation.c, std::conj(rotation.s), std::make_pair(rotation.i, rotation.j),
-                norb, n_alpha);
+                reshaped, rotation.c, std::conj(rotation.s),
+                std::make_pair(rotation.i, rotation.j), norb, n_alpha
+            );
         }
-        for (size_t i = 0; i < phase_shifts_a.size(); ++i)
-        {
+        for (size_t i = 0; i < phase_shifts_a.size(); ++i) {
             auto indices = one_subspace_indices(norb, n_alpha, {i});
-            apply_phase_shift_in_place(reshaped, phase_shifts_a(static_cast<Eigen::Index>(i)), indices);
+            apply_phase_shift_in_place(
+                reshaped, phase_shifts_a(static_cast<Eigen::Index>(i)), indices
+            );
         }
     }
-    if (decomp_b)
-    {
+    if (decomp_b) {
         MatrixXcd transposed = reshaped.transpose();
-        auto& [rots_b, phase_shifts_b] = *decomp_b;
-        for (const auto& rotation : rots_b)
-        {
+        auto &[rots_b, phase_shifts_b] = *decomp_b;
+        for (const auto &rotation : rots_b) {
             apply_orbital_rotation_adjacent_spin_inplace(
                 transposed, rotation.c, std::conj(rotation.s),
-                std::make_pair(rotation.i, rotation.j), norb, n_beta);
+                std::make_pair(rotation.i, rotation.j), norb, n_beta
+            );
         }
-        for (size_t i = 0; i < phase_shifts_b.size(); ++i)
-        {
+        for (size_t i = 0; i < phase_shifts_b.size(); ++i) {
             auto indices = one_subspace_indices(norb, n_beta, {i});
-            apply_phase_shift_in_place(transposed, phase_shifts_b(static_cast<Eigen::Index>(i)), indices);
+            apply_phase_shift_in_place(
+                transposed, phase_shifts_b(static_cast<Eigen::Index>(i)), indices
+            );
         }
         reshaped = transposed.transpose();
     }
@@ -367,21 +366,24 @@ VectorXcd apply_orbital_rotation_spinfull(VectorXcd& vec,
  *
  * @return Rotated vector.
  */
-VectorXcd apply_orbital_rotation(VectorXcd& vec, const OrbitalRotation& rotation, uint64_t norb,
-                                 const Electron& nelec)
+VectorXcd apply_orbital_rotation(
+    VectorXcd &vec, const OrbitalRotation &rotation, uint64_t norb,
+    const Electron &nelec
+)
 {
-    if (nelec.type == ElectronType::Spinless)
-    {
-        if (rotation.type != OrbitalRotationType::Spinless)
-        {
+    if (nelec.type == ElectronType::Spinless) {
+        if (rotation.type != OrbitalRotationType::Spinless) {
             throw std::runtime_error(
-                "Expected spinless orbital rotation with spinless electron type");
+                "Expected spinless orbital rotation with spinless electron type"
+            );
         }
-        return apply_orbital_rotation_spinless(vec, rotation.spinless, norb, nelec.spinless);
-    }
-    else
-    {
-        return apply_orbital_rotation_spinfull(vec, rotation.spinfull, norb, nelec.spinfull);
+        return apply_orbital_rotation_spinless(
+            vec, rotation.spinless, norb, nelec.spinless
+        );
+    } else {
+        return apply_orbital_rotation_spinfull(
+            vec, rotation.spinfull, norb, nelec.spinfull
+        );
     }
 }
 
@@ -395,39 +397,30 @@ VectorXcd apply_orbital_rotation(VectorXcd& vec, const OrbitalRotation& rotation
  *
  * @return Vector of occupation lists (each list is a set of orbital indices).
  */
-std::vector<std::vector<size_t>> gen_occslst(const std::vector<size_t>& orb_list, size_t nelec)
+std::vector<std::vector<size_t>>
+gen_occslst(const std::vector<size_t> &orb_list, size_t nelec)
 {
-    if (nelec == 0)
-    {
+    if (nelec == 0) {
         return {std::vector<size_t>(0)};
-    }
-    else if (nelec > orb_list.size())
-    {
+    } else if (nelec > orb_list.size()) {
         return {{}};
     }
-    std::function<std::vector<std::vector<size_t>>(const std::vector<size_t>&, size_t)>
-        gen_occs_iter =
-            [&](const std::vector<size_t>& list, size_t n) -> std::vector<std::vector<size_t>>
-    {
-        if (n == 1)
-        {
+    std::function<std::vector<std::vector<size_t>>(const std::vector<size_t> &, size_t)>
+        gen_occs_iter = [&](const std::vector<size_t> &list,
+                            size_t n) -> std::vector<std::vector<size_t>> {
+        if (n == 1) {
             std::vector<std::vector<size_t>> res;
             res.reserve(list.size());
-            for (auto i : list)
-            {
+            for (auto i : list) {
                 res.push_back({i});
             }
             return res;
-        }
-        else if (n >= list.size())
-        {
+        } else if (n >= list.size()) {
             return {list};
-        }
-        else
-        {
-            std::vector<std::vector<size_t>> res = gen_occs_iter({list.begin(), list.end() - 1}, n);
-            for (auto& v : gen_occs_iter({list.begin(), list.end() - 1}, n - 1))
-            {
+        } else {
+            std::vector<std::vector<size_t>> res =
+                gen_occs_iter({list.begin(), list.end() - 1}, n);
+            for (auto &v : gen_occs_iter({list.begin(), list.end() - 1}, n - 1)) {
                 v.push_back(list.back());
                 res.push_back(v);
             }

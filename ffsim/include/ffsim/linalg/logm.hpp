@@ -28,7 +28,10 @@ using namespace Eigen;
  * @param A The input matrix for which the logarithm is to be computed.
  * @return The matrix logarithm of the input matrix A.
  */
-MatrixXcd logm(const MatrixXcd& A) { return A.log(); }
+MatrixXcd logm(const MatrixXcd &A)
+{
+    return A.log();
+}
 } // namespace linalg
 } // namespace ffsim
 #endif // LOGM_HPP

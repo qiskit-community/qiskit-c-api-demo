@@ -368,10 +368,8 @@ SQD generate_sqd_data(int argc, char *argv[])
     return sqd;
 }
 
-std::vector<uint8_t> integer_to_bytes(
-    uint64_t n, // NOLINT(bugprone-easily-swappable-parameters)
-    int norb // NOLINT(bugprone-easily-swappable-parameters)
-) 
+std::vector<uint8_t>
+integer_to_bytes(uint64_t n, int norb) // NOLINT(bugprone-easily-swappable-parameters)
 {
     int num_bytes = (norb + 7) / 8;
     std::vector<uint8_t> result(num_bytes);
@@ -438,7 +436,7 @@ std::string write_alphadets_file(
     const size_t norb,     // NOLINT(bugprone-easily-swappable-parameters)
     const size_t num_elec, // NOLINT(bugprone-easily-swappable-parameters)
     const std::vector<BitString> &batch,
-    const size_t // NOLINT(bugprone-easily-swappable-parameters)
+    const size_t
         maximum_numbers_of_ctrs, // NOLINT(bugprone-easily-swappable-parameters)
     const size_t i_recovery
 ) // NOLINT(bugprone-easily-swappable-parameters)
