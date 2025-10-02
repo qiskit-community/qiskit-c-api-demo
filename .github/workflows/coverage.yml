@@ -32,7 +32,7 @@ jobs:
           sudo apt-get install -y g++ clang cmake ninja-build \
             libopenblas-dev liblapack-dev libeigen3-dev \
             libopenmpi-dev openmpi-bin libomp-dev
-      - name: Install tox
+      - name: Install python library
         run: |
           python -m pip install --upgrade pip
           pip install gcovr
@@ -46,9 +46,17 @@ jobs:
         run: |
           cd deps/qrmi
           cargo build --release
-      - name: Build
-        run: ninja -C build
-
+      - name: Configure CMake (Linux)
+        if: runner.os == 'Linux'
+        run: >-
+          cmake -S . -B build
+          -G Ninja
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+      - name: CMake Build
+        run: >-
+          cmake --build build -j4
+          --config Release
       - name: Run tests
         run: |
           cd build
