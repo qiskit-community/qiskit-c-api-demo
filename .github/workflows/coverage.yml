@@ -48,15 +48,15 @@ jobs:
           cargo build --release
       - name: Configure CMake (Linux)
         if: runner.os == 'Linux'
-        run: >-
+        run: >
           cmake -S . -B build
           -G Ninja
-          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1 --coverage"
+
       - name: CMake Build
-        run: >-
-          cmake --build build -j4
-          --config Release
+        run: cmake --build build -j4
+
       - name: Run tests
         run: |
           cd build
@@ -67,15 +67,11 @@ jobs:
             --recovery 1 \
             --number_of_samples 300 \
             --num_shots 1000
+
       - name: Convert to json for coveralls
         if: always()
-        run: >-
-          gcovr --coveralls coveralls.json --root .
-          --exclude build
+        run: >
+          gcovr --coveralls coveralls.json
+          --root .
+          --object-directory build
           --exclude deps
-      - name: Upload report to Coveralls
-        if: always()
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: coveralls.json
