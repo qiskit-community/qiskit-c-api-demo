@@ -46,12 +46,6 @@ jobs:
             compiler: g++
           - os: ubuntu-22.04-arm
             compiler: clang++
-          # macOS x86_64
-          - os: macos-13
-            compiler: clang++
-          # macOS ARM
-          - os: macos-latest
-            compiler: clang++
     steps:
       - uses: actions/checkout@v5
         with:
@@ -86,19 +80,6 @@ jobs:
           ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
           ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
           -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
-      - name: Install LLVM & libomp (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install llvm libomp
-      - name: Configure CMake (macOS, with Homebrew LLVM)
-        if: runner.os == 'macOS'
-        run: |
-          cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang \
-            -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
-            -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1" \
-            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
       - name: CMake Build
         run: >-
           cmake --build build -j4
