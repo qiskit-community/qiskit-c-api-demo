@@ -71,7 +71,8 @@ jobs:
       - name: Convert to json for coveralls
         if: always()
         run: >
-          gcovr --coveralls coveralls.json
-          --root .
-          --object-directory build
-          --exclude deps
+          gcovr --coveralls coveralls.json \
+                --root . \
+                --object-directory build \
+                --exclude deps \
+                --gcov-ignore-errors=no_working_dir_found,unrecognized
