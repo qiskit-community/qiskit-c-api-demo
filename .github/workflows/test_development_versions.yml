@@ -1,0 +1,85 @@
+name: Development version tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  tests:
+    name: development version tests (C++${{ matrix.cxx_standard }}, ${{ matrix.os }}, ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            compiler: g++
+            cxx_standard: 17
+          - os: ubuntu-latest
+            compiler: clang++
+            cxx_standard: 20
+          - os: ubuntu-latest
+            compiler: g++
+            cxx_standard: 23
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Check out default branch of each submodule
+        shell: bash
+        run: |
+          git submodule foreach git remote set-head origin -a
+          git submodule foreach 'git checkout $(git rev-parse --abbrev-ref origin/HEAD)'
+      - name: Enable Kitware ppa, which provides latest cmake
+        if: runner.os == 'Linux'
+        run: |
+          # https://apt.kitware.com/
+          test -f /usr/share/doc/kitware-archive-keyring/copyright || wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+          echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ noble main' | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ clang cmake ninja-build \
+            libopenblas-dev liblapack-dev libeigen3-dev \
+            libopenmpi-dev openmpi-bin libomp-dev
+      - name: Clone submodules
+        run: git submodule update --init --recursive
+      - name: Build qiskit
+        run: |
+          cd deps/qiskit
+          make c
+      - name: Build qrmi
+        run: |
+          cd deps/qrmi
+          cargo build --release
+      - name: Configure CMake
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+          -G Ninja
+          ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
+          ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+      - name: CMake Build
+        run: >-
+          cmake --build build -j4
+          --config Release
+      - name: Run tests
+        run: |
+          cd build
+          ./capi-demo \
+            --fcidump ../data/fcidump_Fe4S4_MO.txt \
+            --tolerance 1.0e-3 \
+            --max_time 600 \
+            --recovery 1 \
+            --number_of_samples 300 \
+            --num_shots 1000

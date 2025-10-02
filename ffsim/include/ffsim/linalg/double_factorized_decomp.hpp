@@ -39,7 +39,7 @@ using Complex = std::complex<double>;
  * @param sign The sign of the imaginary unit (1 or -1)
  * @return The quadrature-transformed matrix
  */
-MatrixXcd quadrature(const MatrixXcd& mat, int sign)
+MatrixXcd quadrature(const MatrixXcd &mat, int sign)
 {
     Complex i(0.0, 1.0);
     Complex factor = 0.5 * (1.0 - static_cast<double>(sign) * i);
@@ -67,42 +67,36 @@ MatrixXcd quadrature(const MatrixXcd& mat, int sign)
  * @return A tuple of (diag_coulomb_out, orbital_rotations), both tensors of
  * shape `[n_vecs, 2, norb, norb]`
  */
-std::tuple<Tensor<Complex, 4>, Tensor<Complex, 4>>
-double_factorized_t2(const Tensor<Complex, 4>& t2_amplitudes, double tol,
-                     std::optional<size_t> max_vecs)
+std::tuple<Tensor<Complex, 4>, Tensor<Complex, 4>> double_factorized_t2(
+    const Tensor<Complex, 4> &t2_amplitudes, double tol, std::optional<size_t> max_vecs
+)
 {
 
     const auto dims = t2_amplitudes.dimensions();
-    const int nocc = dims[0];
-    const int nvrt = dims[2];
+    const int nocc = static_cast<int>(dims[0]);
+    const int nvrt = static_cast<int>(dims[2]);
     const int norb = nocc + nvrt;
     const int n_pairs = nocc * nvrt;
 
     std::vector<int> occ, vrt;
-    for (int i = 0; i < nocc; ++i)
-    {
-        for (int j = 0; j < nvrt; ++j)
-        {
+    for (int i = 0; i < nocc; ++i) {
+        for (int j = 0; j < nvrt; ++j) {
             occ.push_back(i);
             vrt.push_back(j);
         }
     }
 
     std::vector<int> row, col;
-    for (int i = 0; i < nocc; ++i)
-    {
-        for (int a = nocc; a < norb; ++a)
-        {
+    for (int i = 0; i < nocc; ++i) {
+        for (int a = nocc; a < norb; ++a) {
             col.push_back(i);
             row.push_back(a);
         }
     }
 
     MatrixXcd t2_mat = MatrixXcd::Zero(n_pairs, n_pairs);
-    for (int p = 0; p < n_pairs; ++p)
-    {
-        for (int q = 0; q < n_pairs; ++q)
-        {
+    for (int p = 0; p < n_pairs; ++p) {
+        for (int q = 0; q < n_pairs; ++q) {
             t2_mat(p, q) = t2_amplitudes(occ[p], occ[q], vrt[p], vrt[q]);
         }
     }
@@ -113,71 +107,68 @@ double_factorized_t2(const Tensor<Complex, 4>& t2_amplitudes, double tol,
 
     std::vector<size_t> indices(eigs.size());
     std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [&](size_t i, size_t j) { return std::abs(eigs[j]) < std::abs(eigs[i]); });
+    std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+        return std::abs(eigs[static_cast<Index>(j)]) <
+               std::abs(eigs[static_cast<Index>(i)]);
+    });
 
     VectorXcd eigs_sorted(eigs.size());
     MatrixXcd vecs_sorted(vecs.rows(), vecs.cols());
-    for (size_t i = 0; i < indices.size(); ++i)
-    {
-        eigs_sorted(i) = eigs(indices[i]);
-        vecs_sorted.col(i) = vecs.col(indices[i]);
+    for (size_t i = 0; i < indices.size(); ++i) {
+        eigs_sorted(static_cast<Index>(i)) = eigs(static_cast<Index>(indices[i]));
+        vecs_sorted.col(static_cast<Index>(i)) =
+            vecs.col(static_cast<Index>(indices[i]));
     }
 
     double acc = 0.0;
     size_t n_discard = eigs_sorted.size();
-    for (int i = static_cast<int>(eigs_sorted.size()) - 1; i >= 0; --i)
-    {
+    for (int i = static_cast<int>(eigs_sorted.size()) - 1; i >= 0; --i) {
         acc += std::abs(eigs_sorted(i));
-        if (acc >= tol)
-        {
+        if (acc >= tol) {
             n_discard = eigs_sorted.size() - 1 - i;
             break;
         }
     }
 
     size_t n_vecs = eigs_sorted.size() - n_discard;
-    if (max_vecs.has_value())
-    {
+    if (max_vecs.has_value()) {
         n_vecs = std::min(n_vecs, max_vecs.value());
     }
 
-    Tensor<Complex, 4> one_body_tensors(n_vecs, 2, norb, norb);
+    Tensor<Complex, 4> one_body_tensors(
+        static_cast<long>(n_vecs), 2, static_cast<long>(norb), static_cast<long>(norb)
+    );
     one_body_tensors.setZero();
-    for (size_t k = 0; k < n_vecs; ++k)
-    {
+    for (size_t k = 0; k < n_vecs; ++k) {
         MatrixXcd mat = MatrixXcd::Zero(norb, norb);
-        for (int idx = 0; idx < n_pairs; ++idx)
-        {
-            mat(row[idx], col[idx]) = vecs_sorted(idx, k);
+        for (int idx = 0; idx < n_pairs; ++idx) {
+            mat(row[idx], col[idx]) = vecs_sorted(idx, static_cast<Index>(k));
         }
         MatrixXcd Qp = quadrature(mat, 1);
         MatrixXcd Qm = quadrature(mat, -1);
 
-        for (int i = 0; i < norb; ++i)
-        {
-            for (int j = 0; j < norb; ++j)
-            {
-                one_body_tensors(k, 0, i, j) = Qp(i, j);
-                one_body_tensors(k, 1, i, j) = Qm(i, j);
+        for (int i = 0; i < norb; ++i) {
+            for (int j = 0; j < norb; ++j) {
+                one_body_tensors(static_cast<long>(k), 0, i, j) = Qp(i, j);
+                one_body_tensors(static_cast<long>(k), 1, i, j) = Qm(i, j);
             }
         }
     }
 
-    Tensor<Complex, 4> orbital_rotations(n_vecs, 2, norb, norb);
+    Tensor<Complex, 4> orbital_rotations(
+        static_cast<long>(n_vecs), 2, static_cast<long>(norb), static_cast<long>(norb)
+    );
     orbital_rotations.setZero();
-    Tensor<double, 3> eigs_tensor(n_vecs, 2, norb);
+    Tensor<double, 3> eigs_tensor(
+        static_cast<long>(n_vecs), 2, static_cast<long>(norb)
+    );
 
-    for (size_t k = 0; k < n_vecs; ++k)
-    {
-        for (int s = 0; s < 2; ++s)
-        {
+    for (size_t k = 0; k < n_vecs; ++k) {
+        for (int s = 0; s < 2; ++s) {
             MatrixXcd tensor_mat(norb, norb);
-            for (int i = 0; i < norb; ++i)
-            {
-                for (int j = 0; j < norb; ++j)
-                {
-                    tensor_mat(i, j) = one_body_tensors(k, s, i, j);
+            for (int i = 0; i < norb; ++i) {
+                for (int j = 0; j < norb; ++j) {
+                    tensor_mat(i, j) = one_body_tensors(static_cast<long>(k), s, i, j);
                 }
             }
 
@@ -185,49 +176,45 @@ double_factorized_t2(const Tensor<Complex, 4>& t2_amplitudes, double tol,
             VectorXd evals = es_tensor.eigenvalues();
             MatrixXcd evecs = es_tensor.eigenvectors();
 
-            for (int i = 0; i < norb; ++i)
-            {
-                eigs_tensor(k, s, i) = evals(i);
+            for (int i = 0; i < norb; ++i) {
+                eigs_tensor(static_cast<long>(k), s, static_cast<long>(i)) = evals(i);
             }
 
-            for (int i = 0; i < norb; ++i)
-            {
-                for (int j = 0; j < norb; ++j)
-                {
-                    orbital_rotations(k, s, i, j) = evecs(i, j);
+            for (int i = 0; i < norb; ++i) {
+                for (int j = 0; j < norb; ++j) {
+                    orbital_rotations(static_cast<long>(k), s, i, j) = evecs(i, j);
                 }
             }
         }
     }
 
-    Tensor<double, 4> diag_coulomb(n_vecs, 2, norb, norb);
-    for (size_t i = 0; i < n_vecs; ++i)
-    {
-        for (int s = 0; s < 2; ++s)
-        {
+    Tensor<double, 4> diag_coulomb(
+        static_cast<long>(n_vecs), 2, static_cast<long>(norb), static_cast<long>(norb)
+    );
+    for (size_t i = 0; i < n_vecs; ++i) {
+        for (int s = 0; s < 2; ++s) {
             double sign_coeff = (s == 0) ? 1.0 : -1.0;
-            for (int a = 0; a < norb; ++a)
-            {
-                for (int b = 0; b < norb; ++b)
-                {
-                    diag_coulomb(i, s, a, b) = sign_coeff * eigs_tensor(i, s, a) *
-                                               eigs_tensor(i, s, b) * eigs_sorted(i).real();
+            for (int a = 0; a < norb; ++a) {
+                for (int b = 0; b < norb; ++b) {
+                    diag_coulomb(static_cast<long>(i), s, a, b) =
+                        sign_coeff * eigs_tensor(static_cast<long>(i), s, a) *
+                        eigs_tensor(static_cast<long>(i), s, b) *
+                        eigs_sorted(static_cast<Index>(i)).real();
                 }
             }
         }
     }
 
-    Tensor<Complex, 4> diag_coulomb_out(n_vecs, 2, norb, norb);
+    Tensor<Complex, 4> diag_coulomb_out(
+        static_cast<long>(n_vecs), 2, static_cast<long>(norb), static_cast<long>(norb)
+    );
     diag_coulomb_out.setZero();
-    for (size_t i = 0; i < n_vecs; ++i)
-    {
-        for (int s = 0; s < 2; ++s)
-        {
-            for (int a = 0; a < norb; ++a)
-            {
-                for (int b = 0; b < norb; ++b)
-                {
-                    diag_coulomb_out(i, s, a, b) = Complex(diag_coulomb(i, s, a, b), 0.0);
+    for (size_t i = 0; i < n_vecs; ++i) {
+        for (int s = 0; s < 2; ++s) {
+            for (int a = 0; a < norb; ++a) {
+                for (int b = 0; b < norb; ++b) {
+                    diag_coulomb_out(static_cast<long>(i), s, a, b) =
+                        Complex(diag_coulomb(static_cast<long>(i), s, a, b), 0.0);
                 }
             }
         }

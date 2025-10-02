@@ -170,7 +170,7 @@ The following command-line options are available when running capi-demo. These c
 |------------------------------|--------------------------------------------------------------------|---------------|
 | --fcidump <path>             | Path to FCIDUMP file containing molecular integrals.               | ""            |
 | --iteration <int>            | Maximum number of Davidson iterations.                             | 1             |
-| --block <int>                | Maximum size of Litz vector space.                                 | 10            |
+| --block <int>                | Maximum size of Ritz vector space.                                 | 10            |
 | --tolerance <float>          | Convergence tolerance for diagonalization.                        | 1.0e-12      |
 | --max_time <float>          | Maximum allowed time (in seconds) for diagonalization.            | 600.0        |
 | --adet_comm_size <int>      | Number of nodes used to split the alpha-determinants.            | 1             |
@@ -198,6 +198,6 @@ new ones.
 
 ## Contributing
 
-The source code is available [on GitHub].
+The source code is available [on GitHub](https://github.com/qiskit-community/qiskit-capi-demo).
 By participating, you are expected to uphold Qiskit's [code of conduct](https://github.com/Qiskit/qiskit/blob/main/CODE_OF_CONDUCT.md).
 

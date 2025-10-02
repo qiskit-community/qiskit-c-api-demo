@@ -28,7 +28,10 @@ using namespace Eigen;
  * @param A The input matrix for which the exponential is to be computed.
  * @return The matrix exponential of the input matrix A.
  */
-MatrixXcd expm(const MatrixXcd& A) { return A.exp(); }
+MatrixXcd expm(const MatrixXcd &A)
+{
+    return A.exp();
+}
 } // namespace linalg
 } // namespace ffsim
 #endif // EXPM_HPP

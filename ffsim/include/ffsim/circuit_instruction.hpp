@@ -34,8 +34,7 @@ namespace ffsim
  * @param params Parameters associated with the gate.
  * @return A CircuitInstruction object representing the gate operation.
  */
-struct CircuitInstruction
-{
+struct CircuitInstruction {
     std::string gate;
     std::vector<uint64_t> qubits;
     std::optional<std::vector<uint64_t>> clbits;

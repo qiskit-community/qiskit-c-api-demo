@@ -20,16 +20,16 @@
 
 #include <nlohmann/json.hpp>
 
-void load_initial_parameters(const std::string& filepath, uint64_t& norb,
-                             std::pair<uint64_t, uint64_t>& nelec,
-                             std::vector<std::pair<uint64_t, uint64_t>>& alpha_alpha_indices,
-                             std::vector<std::pair<uint64_t, uint64_t>>& alpha_beta_indices,
-                             std::vector<double>& init_params)
+void load_initial_parameters(
+    const std::string &filepath, uint64_t &norb, std::pair<uint64_t, uint64_t> &nelec,
+    std::vector<std::pair<uint64_t, uint64_t>> &alpha_alpha_indices,
+    std::vector<std::pair<uint64_t, uint64_t>> &alpha_beta_indices,
+    std::vector<double> &init_params
+)
 {
 
     std::ifstream i(filepath);
-    if (!i.is_open())
-    {
+    if (!i.is_open()) {
         throw std::runtime_error("Could not open file: " + filepath);
     }
 
@@ -38,34 +38,33 @@ void load_initial_parameters(const std::string& filepath, uint64_t& norb,
 
     norb = input["norb"].get<uint64_t>();
 
-    const auto& nelec_array = input["nelec"];
-    if (!nelec_array.is_array() || nelec_array.size() != 2)
-    {
+    const auto &nelec_array = input["nelec"];
+    if (!nelec_array.is_array() || nelec_array.size() != 2) {
         throw std::runtime_error("'nelec' must be an array of two integers.");
     }
     nelec.first = nelec_array[0].get<uint64_t>();
     nelec.second = nelec_array[1].get<uint64_t>();
 
     alpha_alpha_indices.clear();
-    const auto& aa_indices = input["alpha_alpha_indices"];
-    for (const auto& pair : aa_indices)
-    {
-        alpha_alpha_indices.emplace_back(pair[0].get<uint64_t>(), pair[1].get<uint64_t>());
+    const auto &aa_indices = input["alpha_alpha_indices"];
+    for (const auto &pair : aa_indices) {
+        alpha_alpha_indices.emplace_back(
+            pair[0].get<uint64_t>(), pair[1].get<uint64_t>()
+        );
     }
 
     alpha_beta_indices.clear();
-    const auto& ab_indices = input["alpha_beta_indices"];
-    for (const auto& pair : ab_indices)
-    {
-        alpha_beta_indices.emplace_back(pair[0].get<uint64_t>(), pair[1].get<uint64_t>());
+    const auto &ab_indices = input["alpha_beta_indices"];
+    for (const auto &pair : ab_indices) {
+        alpha_beta_indices.emplace_back(
+            pair[0].get<uint64_t>(), pair[1].get<uint64_t>()
+        );
     }
 
     init_params.clear();
-    const auto& init_params_nodes = input["params"];
-    for (const auto& param : init_params_nodes)
-    {
-        for (const auto& val : param)
-        {
+    const auto &init_params_nodes = input["params"];
+    for (const auto &param : init_params_nodes) {
+        for (const auto &val : param) {
             init_params.push_back(val.get<double>());
         }
     }

@@ -15,8 +15,8 @@
 #ifndef GATES_HPP
 #define GATES_HPP
 
-#include "gates/diag_coulomb.hpp"
-#include "gates/orbital_rotation.hpp"
-#include "gates/phase_shift.hpp"
+#include "diag_coulomb.hpp"
+#include "orbital_rotation.hpp"
+#include "phase_shift.hpp"
 
 #endif // GATES_HPP

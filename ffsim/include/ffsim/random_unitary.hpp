@@ -16,9 +16,13 @@
 #define RANDOM_UNITARY_HPP
 
 #include <Eigen/Dense>
+#include <complex>
+#include <random>
 
 namespace ffsim
 {
+using namespace Eigen;
+using Complex = std::complex<double>;
 
 /**
  * @brief Generates a random unitary matrix of size N x N.
@@ -29,17 +33,15 @@ namespace ffsim
  * @param N The size of the unitary matrix.
  * @return A random unitary matrix of size N x N.
  */
-Eigen::MatrixXcd random_unitary(int N)
+MatrixXcd random_unitary(int N)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<double> dist(0.0, 1.0);
 
     MatrixXcd A = MatrixXcd::Zero(N, N);
-    for (int i = 0; i < N; ++i)
-    {
-        for (int j = 0; j < N; ++j)
-        {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
             A(i, j) = Complex(dist(gen), dist(gen));
         }
     }

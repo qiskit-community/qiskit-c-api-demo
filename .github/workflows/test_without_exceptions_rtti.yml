@@ -1,0 +1,79 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  tests:
+    name: without exceptions or RTTI (C++${{ matrix.cxx_standard }}, ${{ matrix.os }}, ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            compiler: g++
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ clang cmake ninja-build \
+            libopenblas-dev liblapack-dev libeigen3-dev \
+            libopenmpi-dev openmpi-bin libomp-dev
+      - name: Clone submodules
+        run: git submodule update --init --recursive
+      - name: Build qiskit
+        run: |
+          cd deps/qiskit
+          make c
+      - name: Build qrmi
+        run: |
+          cd deps/qrmi
+          cargo build --release
+      - name: Clone submodules
+        run: git submodule update --init --recursive
+      - name: Build qiskit
+        run: |
+          cd deps/qiskit
+          make c
+      - name: Build qrmi
+        run: |
+          cd deps/qrmi
+          cargo build --release
+      - name: Configure CMake
+        run: >-
+          cmake -S . -B build
+          -G Ninja
+          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+          -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -DQKA_SQD_DISABLE_EXCEPTIONS=1 -DDOCTEST_CONFIG_NO_EXCEPTIONS_BUT_WITH_ALL_ASSERTS"
+          ${{ matrix.compiler && format('-DCMAKE_CXX_COMPILER={0}', matrix.compiler) }}
+          ${{ matrix.cxx_standard && format('-DCMAKE_CXX_STANDARD={0}', matrix.cxx_standard) }}
+          -DCMAKE_CXX_FLAGS="-DUSE_RANDOM_SHOTS=1"
+      - name: CMake Build
+        run: >-
+          cmake --build build -j4
+          --config Release
+      - name: Run tests
+        run: |
+          cd build
+          ./capi-demo \
+            --fcidump ../data/fcidump_Fe4S4_MO.txt \
+            --tolerance 1.0e-3 \
+            --max_time 600 \
+            --recovery 1 \
+            --number_of_samples 300 \
+            --num_shots 1000
+

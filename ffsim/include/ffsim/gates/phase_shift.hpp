@@ -32,12 +32,12 @@ using Complex = std::complex<double>;
  * @param indices The indices of the rows/columns to which the phase shift is
  * applied.
  */
-void apply_phase_shift_in_place(MatrixXcd& mat, const Complex& phase,
-                                const std::vector<size_t>& indices)
+void apply_phase_shift_in_place(
+    MatrixXcd &mat, const Complex &phase, const std::vector<size_t> &indices
+)
 {
-    for (size_t row : indices)
-    {
-        mat.row(row) *= phase;
+    for (size_t row : indices) {
+        mat.row(static_cast<Index>(row)) *= phase;
     }
 }
 
