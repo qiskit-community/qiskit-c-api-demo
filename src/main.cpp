@@ -36,6 +36,7 @@
 #include "primitives/backend_sampler_v2.hpp"
 #include "service/qiskit_runtime_service.hpp"
 
+using namespace Qiskit;
 using namespace Qiskit::circuit;
 using namespace Qiskit::providers;
 using namespace Qiskit::primitives;
@@ -308,9 +309,19 @@ int main(int argc, char *argv[])
 
             // Quantum circuit with Qiskit C++
             auto qr = QuantumRegister(2 * norb);   // quantum registers
-            auto cr = ClassicalRegister(2 * norb); // classical registers
+            auto cr = ClassicalRegister(2 * norb, "meas"); // classical registers
+            auto cr_test = ClassicalRegister(2 * norb, "test"); // classical registers for test
+            std::vector<ClassicalRegister> cregs({cr});
+            if (sqd_data.use_reset_mitigation) {
+                cregs.push_back(cr_test);
+            }
             auto circ =
-                QuantumCircuit(qr, cr); // create a quantum circuits with registers
+                QuantumCircuit(std::vector<QuantumRegister>({qr}), cregs); // create a quantum circuits with registers
+
+            if (sqd_data.use_reset_mitigation) {
+                // add measure to all qubits and store to test bits
+                circ.measure(qr, cr_test);
+            }
 
             // add gates from instruction list from hf_and_ucj_op_spin_balanced_jw
             //   for demo: calling Qiskit C++ circuit functions to make quantum circuit
@@ -370,7 +381,26 @@ int main(int argc, char *argv[])
 
             // Extract classical counts from the execution result.
             // These form the classical distribution for downstream recovery/selection.
-            counts = pub_result.data().get_counts();
+            if (sqd_data.use_reset_mitigation) {
+                auto meas_bits = pub_result.data("meas");
+                auto test_bits = pub_result.data("test");
+
+                // get index whose bitcout is zero
+                auto bitcounts = test_bits.bitcount();
+                reg_t zero_index;
+                zero_index.reserve(bitcounts.size());
+                for (uint_t i = 0; i < bitcounts.size(); i++) {
+                    if (bitcounts[i] == 0) {
+                        zero_index.push_back(i);
+                    }
+                }
+
+                // return bits only whose bitcount are zero
+                counts = meas_bits.get_counts(zero_index);
+            } else {
+                counts = pub_result.data().get_counts();
+            }
+
 #endif // USE_RANDOM_SHOTS
         }
 
