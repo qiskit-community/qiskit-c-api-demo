@@ -1,4 +1,4 @@
-# Demonstration of SQD using Qiskit CAPI
+# Demonstration of SQD using the Qiskit C API
 
 This demo shows how to post-process noisy quantum samples to approximate the ground state energy of the Fe₄S₄ cluster, using the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991).
 
@@ -9,7 +9,7 @@ This demo shows how to post-process noisy quantum samples to approximate the gro
 - Integration with Qiskit C++, QRMI, and qiskit-addon-sqd-hpc.
 - Support for hybrid quantum-classical workflows, including:
   - Quantum sampling on real backends.
-  - Classical post-processing using the SQD.
+  - Classical post-processing using the SQD addon.
   - Diagonalization using the SBD eigensolver.
 - Designed for scalable execution on high-performance computing (HPC) clusters.
 
@@ -23,12 +23,12 @@ This demo shows how to post-process noisy quantum samples to approximate the gro
 │   └── parameters_fe4s4.json        # JSON file containing parameters for the LUCJ circuit
 │
 ├── deps
-│   ├── boost                        # Boost C++ dependency
+│   ├── boost                        # Boost C++ dependency (for dynamic_bitset)
 │   ├── qiskit                       # Qiskit core library
-│   ├── qiskit-addon-sqd-hpc         # Qiskit extension for SQD
+│   ├── qiskit-addon-sqd-hpc         # Qiskit addon for SQD (C++ version)
 │   ├── qiskit-cpp                   # C++ bindings for Qiskit
 │   ├── qrmi                         # QRMI (quantum resource management interface)
-│   └── sbd                          # SBD module
+│   └── sbd                          # SBD eigensolver
 │
 ├── ffsim　　　　　　　　　　　　　　　　　# C++ header files for the ffsim library
 │
@@ -37,7 +37,6 @@ This demo shows how to post-process noisy quantum samples to approximate the gro
 │   ├── main.cpp                     # Main entry point of the executable
 │   ├── sbd_helper.hpp               # Helper functions for SBD
 │   └── sqd_helper.hpp               # Helper functions for SQD
-
 ```
 
 ## Requirements
@@ -152,13 +151,12 @@ mpirun -np 96 ./capi-demo \
 ```
 
 ## Run Options
-The following command-line options are available when running capi-demo. These control the behavior of the SQD simulation and quantum sampling:
+The following command-line options are available when running `capi-demo`. These control the behavior of the SQD simulation and quantum sampling:
 
 ### SQD Options
 | Option                       | Description                                                        | Default Value |
 |------------------------------|--------------------------------------------------------------------|---------------|
 | --recovery <int>             | Number of configuration recovery iterations.                       | 3             |
-| --number_of_batch <int>      | Number of batches per recovery iteration.                          | 1             |
 | --number_of_samples <int>    | Number of samples per batch.                                      | 1000         |
 | --backend_name <str>         | Name of the quantum backend to use (e.g., "ibm_torino").| ""            |
 | --num_shots <int>           | Number of shots per quantum circuit execution.                    | 10000         |
@@ -186,14 +184,6 @@ This data is from https://github.com/zhendongli2008/Active-space-model-for-Iron-
 These parameters can also be obtained using `ffsim`.
 
 - The values in the `initial_occupancies_fe4s4.json` file are the eigenvalues obtained by diagonalizing the contracted one-electron density matrix from the MP2 method.
-
-## Deprecation policy
-
-We follow [semantic versioning](https://semver.org/) and are guided by the principles in
-[Qiskit's deprecation policy](https://github.com/Qiskit/qiskit/blob/main/DEPRECATION.md).
-We may occasionally make breaking changes in order to improve the user experience.
-When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the
-new ones.
 
 
 ## Contributing
