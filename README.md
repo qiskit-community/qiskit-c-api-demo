@@ -1,11 +1,19 @@
 # Demonstration of SQD using the Qiskit C API
 
-This demo shows how to post-process noisy quantum samples to approximate the ground state energy of the Fe₄S₄ cluster, using the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991).
+This code demonstrates an **end-to-end compiled hybrid quantum/classical computation** which approximates the ground state energy of the Fe₄S₄ cluster. Unlike earlier demonstrations, **this code compiles to a single executable** which can be run across many nodes of a supercomputer.  The workflow performs the following steps:
 
+1. Build a circuit
+2. Transpile that circuit for a target hardware device
+3. Execute the transpiled circuit on hardware
+4. Perform classical post-processing according to the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991).
+
+Steps 1 and 2 demonstrate features of the Qiskit C API that were introduced in Qiskit 2.1 and 2.2, respectively.
+
+Step 4 is enabled by a new HPC-ready SQD addon for Qiskit, together with the SBD eigensolver developed by RIKEN.
 
 ## Features
 
-- HPC-ready implementation using modern C++17 and MPI.
+- HPC-ready implementation using modern C++17, MPI, and OpenMP.
 - Integration with Qiskit C++, QRMI, and qiskit-addon-sqd-hpc.
 - Support for hybrid quantum-classical workflows, including:
   - Quantum sampling on real backends.
