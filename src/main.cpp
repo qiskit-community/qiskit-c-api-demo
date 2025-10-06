@@ -308,15 +308,18 @@ int main(int argc, char *argv[])
             auto instructions = hf_and_ucj_op_spin_balanced_jw(qubits, nelec, ucj_op);
 
             // Quantum circuit with Qiskit C++
-            auto qr = QuantumRegister(2 * norb);   // quantum registers
-            auto cr = ClassicalRegister(2 * norb, "meas"); // classical registers
-            auto cr_test = ClassicalRegister(2 * norb, "test"); // classical registers for test
+            // quantum registers
+            auto qr = QuantumRegister(2 * norb);
+            // classical registers
+            auto cr = ClassicalRegister(2 * norb, "meas");
+            // classical registers for test
+            auto cr_test = ClassicalRegister(2 * norb, "test");
             std::vector<ClassicalRegister> cregs({cr});
             if (sqd_data.use_reset_mitigation) {
                 cregs.push_back(cr_test);
             }
-            auto circ =
-                QuantumCircuit(std::vector<QuantumRegister>({qr}), cregs); // create a quantum circuits with registers
+            // create a quantum circuits with registers
+            auto circ = QuantumCircuit(std::vector<QuantumRegister>({qr}), cregs);
 
             if (sqd_data.use_reset_mitigation) {
                 // add measure to all qubits and store to test bits
