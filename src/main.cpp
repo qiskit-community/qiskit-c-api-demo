@@ -324,6 +324,8 @@ int main(int argc, char *argv[])
             if (sqd_data.use_reset_mitigation) {
                 // add measure to all qubits and store to test bits
                 circ.measure(qr, cr_test);
+                for (int i = 0; i < 2 * norb; i++)
+                    circ.barrier(i);
             }
 
             // add gates from instruction list from hf_and_ucj_op_spin_balanced_jw
