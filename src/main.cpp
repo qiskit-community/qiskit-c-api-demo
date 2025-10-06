@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
                 // per iteration.
                 Qiskit::addon::sqd::subsample(
                     batch, postselected_bitstrings, postselected_probs,
-                    samples_per_batch, rng
+                    std::min(samples_per_batch, postselected_bitstrings.size()), rng
                 );
                 // Write alpha-determinants file for SBD input (includes run id /
                 // iteration for traceability).
