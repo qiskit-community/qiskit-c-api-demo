@@ -1,6 +1,6 @@
 # Demonstration of SQD using the Qiskit C API
 
-This code demonstrates an **end-to-end compiled hybrid quantum/classical computation** that uses [Sample-based Quantum Diagonalization (SQD)](https://www.science.org/doi/10.1126/sciadv.adu9991) to approximate the ground state energy of the Fe₄S₄ cluster. Unlike earlier demonstrations, **this code compiles to a single executable** which can be run across many nodes of a supercomputer while also leveraging quantum resources.  The workflow performs the following steps:
+This code demonstrates an **end-to-end compiled hybrid quantum/classical computation** that uses [Sample-based Quantum Diagonalization (SQD)](https://www.science.org/doi/10.1126/sciadv.adu9991) to approximate the ground state energy of the Fe₄S₄ cluster. Unlike earlier demonstrations, this code compiles to a single executable which can be run across many nodes of a supercomputer while also leveraging quantum resources.  The workflow performs the following steps:
 
 1. Build a circuit
 2. Transpile that circuit for a target hardware device
@@ -9,7 +9,7 @@ This code demonstrates an **end-to-end compiled hybrid quantum/classical computa
 
 Steps 1 and 2 demonstrate features of the [Qiskit C API](https://quantum.cloud.ibm.com/docs/en/api/qiskit-c) that were introduced in Qiskit 2.1 and 2.2, respectively.
 
-Step 4 is enabled by a new HPC-ready SQD addon for Qiskit, together with the SBD eigensolver developed by RIKEN.
+Step 4 is enabled by a new [HPC-ready SQD addon](https://github.com/Qiskit/qiskit-addon-sqd-hpc) for Qiskit, together with the [SBD eigensolver](https://github.com/r-ccs-cms/sbd) developed by RIKEN.
 
 ## Features
 
