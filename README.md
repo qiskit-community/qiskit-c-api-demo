@@ -7,7 +7,7 @@ This code demonstrates an **end-to-end compiled hybrid quantum/classical computa
 3. Execute the transpiled circuit on hardware
 4. Perform classical post-processing according to the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991).
 
-Steps 1 and 2 demonstrate features of the Qiskit C API that were introduced in Qiskit 2.1 and 2.2, respectively.
+Steps 1 and 2 demonstrate features of the [Qiskit C API](https://quantum.cloud.ibm.com/docs/en/api/qiskit-c) that were introduced in Qiskit 2.1 and 2.2, respectively.
 
 Step 4 is enabled by a new HPC-ready SQD addon for Qiskit, together with the SBD eigensolver developed by RIKEN.
 
