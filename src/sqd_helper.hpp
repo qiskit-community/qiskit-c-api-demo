@@ -291,7 +291,6 @@ struct SQD {
     std::string run_id = date_str;
     uint64_t n_recovery = 3;           // number of configuration recovery iterations
     uint64_t samples_per_batch = 1000; // number of samples per batch
-    uint64_t n_batches = 1;            // number of batches per iteration
     bool verbose = false;              // print messages to stdout
     bool with_hf = true;               // use Hartree-Fock as a reference state
     bool use_reset_mitigation = false;
@@ -310,7 +309,6 @@ struct SQD {
         ss << "# run_id:" << run_id << std::endl;
         ss << "# n_recovery: " << n_recovery << std::endl;
         ss << "# samples_per_batch: " << samples_per_batch << std::endl;
-        ss << "# n_batches: " << n_batches << std::endl;
         ss << "# backend_name: " << backend_name << std::endl;
         ss << "# num_shots: " << num_shots << std::endl;
         return ss.str();
@@ -344,10 +342,6 @@ SQD generate_sqd_data(int argc, char *argv[])
     for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "--recovery") {
             sqd.n_recovery = std::stoi(argv[i + 1]);
-            i++;
-        }
-        if (std::string(argv[i]) == "--number_of_batch") {
-            sqd.n_batches = std::stoi(argv[i + 1]);
             i++;
         }
         if (std::string(argv[i]) == "--number_of_samples") {
