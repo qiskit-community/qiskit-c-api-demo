@@ -2,10 +2,10 @@
 
 This code demonstrates an **end-to-end compiled hybrid quantum/classical computation** that uses [Sample-based Quantum Diagonalization (SQD)](https://www.science.org/doi/10.1126/sciadv.adu9991) to approximate the ground state energy of the Fe₄S₄ cluster. Unlike earlier demonstrations, this code compiles to a single executable which can be run across many nodes of a supercomputer while also leveraging quantum resources.  The workflow performs the following steps:
 
-1. Build a circuit
-2. Transpile that circuit for a target hardware device
-3. Execute the transpiled circuit on hardware
-4. Perform classical post-processing according to the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991)
+1. Build a circuit.
+2. Transpile that circuit for a target hardware device.
+3. Execute the transpiled circuit on hardware.
+4. Perform classical post-processing according to the [Sample-based Quantum Diagonalization (SQD) algorithm](https://www.science.org/doi/10.1126/sciadv.adu9991).
 
 Steps 1 and 2 demonstrate features of the [Qiskit C API](https://quantum.cloud.ibm.com/docs/en/api/qiskit-c) that were introduced in Qiskit 2.1 and 2.2, respectively.
 
