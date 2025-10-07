@@ -9,6 +9,8 @@ This code demonstrates an **end-to-end compiled hybrid quantum/classical computa
 
 Steps 1 and 2 demonstrate features of the [Qiskit C API](https://quantum.cloud.ibm.com/docs/en/api/qiskit-c) that were introduced in Qiskit 2.1 and 2.2, respectively.
 
+Step 3 is mediated by the [Quantum Resource Management Interface](https://github.com/qiskit-community/qrmi) (QRMI), which is a thin middleware for controlling quantum resources.
+
 Step 4 is enabled by a new [HPC-ready SQD addon](https://github.com/Qiskit/qiskit-addon-sqd-hpc) for Qiskit, together with the [SBD eigensolver](https://github.com/r-ccs-cms/sbd) developed by RIKEN.
 
 ## Features
