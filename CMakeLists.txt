@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(capi-demo LANGUAGES C CXX)
+project(c-api-demo LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -36,8 +36,8 @@ find_package(MPI REQUIRED)
 # OpenMP library
 find_package(OpenMP REQUIRED)
 
-# qiskit_capi library
-add_library(qiskit_capi STATIC IMPORTED)
+# qiskit_c_api library
+add_library(qiskit_c_api STATIC IMPORTED)
 
 # nlohmann_json
 include(FetchContent)
@@ -94,16 +94,16 @@ target_include_directories(sbd INTERFACE
 )
 target_link_libraries(sbd INTERFACE MPI::MPI_C)
 
-add_executable(capi-demo src/main.cpp)
+add_executable(c-api-demo src/main.cpp)
 
 
 if (MSVC)
-    target_link_directories(capi-demo
+    target_link_directories(c-api-demo
         PUBLIC
             ${QISKIT_ROOT}/target/release
             ${QRMI_ROOT}/target/release
     )
-    target_link_libraries(capi-demo
+    target_link_libraries(c-api-demo
         ffsim
         sqd-addon
         boost_dynamic_bitset
@@ -116,12 +116,12 @@ if (MSVC)
         -lopenblas
     )
 elseif(APPLE)
-    target_link_directories(capi-demo
+    target_link_directories(c-api-demo
       PUBLIC
         ${QISKIT_ROOT}/dist/c/lib
         ${QRMI_ROOT}/target/release
     )
-    target_link_libraries(capi-demo
+    target_link_libraries(c-api-demo
         qiskit
         qrmi
         ffsim
@@ -134,7 +134,7 @@ elseif(APPLE)
         ${ACCELERATE_LIBRARY}
     )
 else()
-    target_link_libraries(capi-demo
+    target_link_libraries(c-api-demo
       PUBLIC
         "-L${QISKIT_ROOT}/dist/c/lib -L${QRMI_ROOT}/target/release -Wl,-rpath ${QISKIT_ROOT}/dist/c/lib -Wl,-rpath ${QRMI_ROOT}/target/release"
         qiskit
@@ -150,7 +150,7 @@ else()
     )
 endif()
 
-target_include_directories(capi-demo
+target_include_directories(c-api-demo
     PRIVATE
         ${QISKIT_ROOT}/dist/c/include
         ${QRMI_ROOT}

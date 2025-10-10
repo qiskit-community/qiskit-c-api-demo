@@ -135,7 +135,7 @@ You can obtain these credentials from your IBM Quantum account.
 ### Single Process
 
 ```sh
-./capi-demo \
+./c-api-demo \
   --fcidump ../data/fcidump_Fe4S4_MO.txt \
   -v \
   --tolerance 1.0e-3 \
@@ -149,7 +149,7 @@ You can obtain these credentials from your IBM Quantum account.
 ### MPI Execution
 
 ```sh
-mpirun -np 96 ./capi-demo \
+mpirun -np 96 ./c-api-demo \
   --fcidump ../data/fcidump_Fe4S4_MO.txt \
   -v \
   --tolerance 1.0e-3 \
@@ -161,7 +161,7 @@ mpirun -np 96 ./capi-demo \
 ```
 
 ## Run Options
-The following command-line options are available when running `capi-demo`. These control the behavior of the SQD simulation and quantum sampling:
+The following command-line options are available when running `c-api-demo`. These control the behavior of the SQD simulation and quantum sampling:
 
 ### SQD Options
 | Option                       | Description                                                        | Default Value |
@@ -198,6 +198,6 @@ These parameters can also be obtained using `ffsim`.
 
 ## Contributing
 
-The source code is available [on GitHub](https://github.com/qiskit-community/qiskit-capi-demo).
+The source code is available [on GitHub](https://github.com/qiskit-community/qiskit-c-api-demo).
 By participating, you are expected to uphold Qiskit's [code of conduct](https://github.com/Qiskit/qiskit/blob/main/CODE_OF_CONDUCT.md).
 
