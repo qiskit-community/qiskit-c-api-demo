@@ -90,6 +90,14 @@ SBD generate_sbd_data(int argc, char *argv[])
             sbd.task_comm_size = std::atoi(argv[i + 1]);
             i++;
         }
+        if (std::string(argv[i]) == "--energy_target") {
+            sbd.init = std::atoi(argv[i + 1]);
+            i++;
+        }
+        if (std::string(argv[i]) == "--energy_variance") {
+            sbd.init = std::atoi(argv[i + 1]);
+            i++;
+        }
     }
     return sbd;
 }
