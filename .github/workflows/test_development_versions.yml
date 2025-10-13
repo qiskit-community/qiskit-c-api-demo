@@ -76,7 +76,7 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          ./capi-demo \
+          ./c-api-demo \
             --fcidump ../data/fcidump_Fe4S4_MO.txt \
             --tolerance 1.0e-3 \
             --max_time 600 \
