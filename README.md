@@ -184,6 +184,8 @@ The following command-line options are available when running `capi-demo`. These
 | --adet_comm_size <int>      | Number of nodes used to split the alpha-determinants.            | 1             |
 | --bdet_comm_size <int>      | Number of nodes used to split the beta-determinants.             | 1             |
 | --task_comm_size <int>      | MPI communicator size for task-level parallelism.                 | 1             |
+| --energy_target <float>     | Target energy for convergence (optional).                          | -326.6 (Fe4S4)         |
+| --energy_variance <float>   | Target energy variance for convergence (optional).                     | 1.0 (Fe4S4)        |
 
 
 ## Input Data
@@ -195,6 +197,13 @@ These parameters can also be obtained using `ffsim`.
 
 - The values in the `initial_occupancies_fe4s4.json` file are the eigenvalues obtained by diagonalizing the contracted one-electron density matrix from the MP2 method.
 
+## Case of Using another molecule
+To simulate a different molecule, you need to prepare the following files:
+1. An FCIDUMP file containing the molecular integrals for the target molecule.
+2. A JSON file containing the parameters for the LUCJ circuit, including the number of orbitals, number of electrons, and other relevant settings.
+3. A JSON file defining the initial orbital occupancies.
+4. Set appropriate values for `--energy_target` and `--energy_variance` based on the target molecule.
+5. Change the file paths in the main.cpp.
 
 ## Contributing
 
