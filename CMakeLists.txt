@@ -157,3 +157,4 @@ target_include_directories(c-api-demo
         ${QISKIT_CPP_ROOT}/src
 )
 
+target_compile_options(capi-demo PRIVATE "-DQRMI_ROOT=${QRMI_ROOT}")

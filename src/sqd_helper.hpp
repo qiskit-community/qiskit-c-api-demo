@@ -293,6 +293,7 @@ struct SQD {
     uint64_t samples_per_batch = 1000; // number of samples per batch
     bool verbose = false;              // print messages to stdout
     bool with_hf = true;               // use Hartree-Fock as a reference state
+    bool use_reset_mitigation = false;
 
     std::string backend_name = "";
     uint64_t num_shots = 10000;
@@ -357,6 +358,9 @@ SQD generate_sqd_data(int argc, char *argv[])
         }
         if (std::string(argv[i]) == "-v") {
             sqd.verbose = true;
+        }
+        if (std::string(argv[i]) == "--use_reset_mitigation") {
+            sqd.use_reset_mitigation = true;
         }
     }
     return sqd;
