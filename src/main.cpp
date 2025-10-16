@@ -424,8 +424,7 @@ int main(int argc, char *argv[])
                 // per iteration.
                 std::vector<boost::dynamic_bitset<>> batch;
                 Qiskit::addon::sqd::subsample(
-                    batch, bs_mat_tmp, probs_arr_tmp,
-                    samples_per_batch, rng
+                    batch, bs_mat_tmp, probs_arr_tmp, samples_per_batch, rng
                 );
                 // Write alpha-determinants file for SBD input (includes run id /
                 // iteration for traceability).
