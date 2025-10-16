@@ -148,6 +148,12 @@ You can obtain these credentials from your IBM Quantum account.
 
 ### MPI Execution
 
+This code supports threading at the level of `MPI_THREAD_FUNNELED`,
+which means that only a single thread per MPI rank can make MPI calls.
+One reasonable configuration is to set the number of MPI ranks equal
+to the number of compute nodes, and to set `OMP_NUM_THREADS` equal to
+the number of CPU cores per node.
+
 ```sh
 mpirun -np 96 ./c-api-demo \
   --fcidump ../data/fcidump_Fe4S4_MO.txt \
