@@ -26,7 +26,6 @@
 #include "ffsim/ucjop_spinbalanced.hpp"
 #include "load_parameters.hpp"
 #include "qiskit/addon/sqd/configuration_recovery.hpp"
-#include "qiskit/addon/sqd/postselection.hpp"
 #include "qiskit/addon/sqd/subsampling.hpp"
 #include "sbd_helper.hpp"
 #include "sqd_helper.hpp"
@@ -83,7 +82,7 @@ static auto bitsets_to_bitstrings(const std::vector<boost::dynamic_bitset<>> &bi
     return bitstrings;
 }
 // Convert string-based BitString objects back to boost::dynamic_bitset<>.
-// Internal representation for efficient bitwise operations in recovery/post-selection.
+// Internal representation for efficient bitwise operations in configuration recovery.
 static auto bitsets_from_bitstrings(const std::vector<BitString> &bitstrings)
     -> std::vector<boost::dynamic_bitset<>>
 {
@@ -374,7 +373,7 @@ int main(int argc, char *argv[])
 #endif // USE_RANDOM_SHOTS
         }
 
-        ////// Configuration Recovery, Post Selection, Diagonalization //////
+        ////// Configuration Recovery, Subsampling, Diagonalization //////
 
         // Expand counts (map) into (bitstrings[], probs[]).
         auto [bitstring_matrix_full_, probs_arr_full] = counts_to_arrays(counts);
@@ -395,7 +394,7 @@ int main(int argc, char *argv[])
             return 1;
         }
         // ===== Configuration recovery loop (n_recovery iterations) =====
-        // Each iter: recover_configurations → postselect → subsample → SBD
+        // Each iter: recover_configurations → subsample → SBD
         // (diagonalize) → update occupancies.
         for (uint64_t i_recovery = 0; i_recovery < n_recovery; ++i_recovery) {
             log(sqd_data, {"start recovery: iteration=", std::to_string(i_recovery)});
@@ -418,24 +417,14 @@ int main(int argc, char *argv[])
                 bs_mat_tmp = std::move(recovered.first);
                 probs_arr_tmp = std::move(recovered.second);
 
-                std::vector<boost::dynamic_bitset<>> batch;
-                // Post-selection: accept bitstrings whose left/right (alpha/beta)
-                // Hamming weights match target electron counts.
-                auto [postselected_bitstrings, postselected_probs] =
-                    Qiskit::addon::sqd::postselect_bitstrings(
-                        bs_mat_tmp, probs_arr_tmp,
-                        Qiskit::addon::sqd::MatchesRightLeftHamming(
-                            num_elec_a, num_elec_b
-                        )
-                    );
-                log(sqd_data, {"Number of postselected bitstrings: ",
-                               std::to_string(postselected_bitstrings.size())});
+                log(sqd_data, {"Number of recovered bitstrings: ",
+                               std::to_string(bs_mat_tmp.size())});
 
                 // Subsample to a single batch of fixed size for SBD, to cap IO/compute
                 // per iteration.
+                std::vector<boost::dynamic_bitset<>> batch;
                 Qiskit::addon::sqd::subsample(
-                    batch, postselected_bitstrings, postselected_probs,
-                    samples_per_batch, rng
+                    batch, bs_mat_tmp, probs_arr_tmp, samples_per_batch, rng
                 );
                 // Write alpha-determinants file for SBD input (includes run id /
                 // iteration for traceability).
