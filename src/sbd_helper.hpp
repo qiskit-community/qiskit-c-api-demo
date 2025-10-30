@@ -46,8 +46,8 @@ struct SBD {
 
     double threshold = 0.0;
 
-    // This default value is for the Fe4S4
-    double energy_target = -326.6;
+    // This default value is for the n2
+    double energy_target = -108.9;
     double energy_variance = 1.0;
 
     std::string adetfile = "AlphaDets.bin";

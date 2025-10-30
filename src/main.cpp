@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
         uint64_t samples_per_batch = sqd_data.samples_per_batch;
 
         // Read initial parameters (norb, nelec, params for lucj) from JSON.
-        const std::string input_file_path = "../data/parameters_fe4s4.json";
+        const std::string input_file_path = "../data/parameters_n2.json";
         double tol = 1e-8;
         uint64_t norb;
         size_t n_reps = 1;
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
             // Load prior alpha/beta occupancies used as the initial distribution for
             // recovery.
             initial_occupancies =
-                load_initial_occupancies("../data/initial_occupancies_fe4s4.json");
+                load_initial_occupancies("../data/initial_occupancies_n2.json");
         } catch (const std::invalid_argument &e) {
             std::cerr << "Error loading initial occupancies: " << e.what() << std::endl;
             return 1;

@@ -28,9 +28,9 @@ Step 4 is enabled by a new [HPC-ready SQD addon](https://github.com/Qiskit/qiski
 
 ```
 ├── data
-│   ├── fcidump_Fe4S4_MO.txt         # Input file containing molecular orbital integrals
-│   ├── initial_occupancies_fe4s4.json # JSON file defining initial orbital occupancies
-│   └── parameters_fe4s4.json        # JSON file containing parameters for the LUCJ circuit
+│   ├── fcidump_n2.txt         # Input file containing molecular orbital integrals
+│   ├── initial_occupancies_n2.json # JSON file defining initial orbital occupancies
+│   └── parameters_n2.json        # JSON file containing parameters for the LUCJ circuit
 │
 ├── deps
 │   ├── boost                        # Boost C++ dependency (for dynamic_bitset)
@@ -136,7 +136,7 @@ You can obtain these credentials from your IBM Quantum account.
 
 ```sh
 ./c-api-demo \
-  --fcidump ../data/fcidump_Fe4S4_MO.txt \
+  --fcidump ../data/fcidump_n2.txt \
   -v \
   --tolerance 1.0e-3 \
   --max_time 600 \
@@ -156,7 +156,7 @@ the number of CPU cores per node.
 
 ```sh
 mpirun -np 96 ./c-api-demo \
-  --fcidump ../data/fcidump_Fe4S4_MO.txt \
+  --fcidump ../data/fcidump_n2.txt \
   -v \
   --tolerance 1.0e-3 \
   --max_time 600 \
@@ -190,18 +190,17 @@ The following command-line options are available when running `c-api-demo`. Thes
 | --adet_comm_size <int>      | Number of nodes used to split the alpha-determinants.            | 1             |
 | --bdet_comm_size <int>      | Number of nodes used to split the beta-determinants.             | 1             |
 | --task_comm_size <int>      | MPI communicator size for task-level parallelism.                 | 1             |
-| --energy_target <float>     | Target energy for convergence (optional).                          | -326.6 (Fe4S4)         |
-| --energy_variance <float>   | Target energy variance for convergence (optional).                     | 1.0 (Fe4S4)        |
+| --energy_target <float>     | Target energy for convergence (optional).                          | -  108.9 (n2)         |
+| --energy_variance <float>   | Target energy variance for convergence (optional).                     | 1.0 (n2)        |
 
 
 ## Input Data
-- The `fcidump_Fe4S4_MO.txt` file used in the examples is based on the Fe₄S₄ cluster model.
-This data is from https://github.com/zhendongli2008/Active-space-model-for-Iron-Sulfur-Clusters/blob/main/Fe2S2_and_Fe4S4/Fe4S4/fe4s4 .
+- The `fcidump_n2.txt` file used in the examples is based on the Fe₄S₄ cluster model.
 
-- The `parameters_fe4s4.json` file contains the parameters for the LUCJ circuit, including the number of orbitals, number of electrons, and other relevant settings.
+- The `parameters_n2.json` file contains the parameters for the LUCJ circuit, including the number of orbitals, number of electrons, and other relevant settings.
 These parameters can also be obtained using `ffsim`.
 
-- The values in the `initial_occupancies_fe4s4.json` file are the eigenvalues obtained by diagonalizing the contracted one-electron density matrix from the MP2 method.
+- The values in the `initial_occupancies_n2.json` file are the eigenvalues obtained by diagonalizing the contracted one-electron density matrix from the MP2 method.
 
 ## Case of Using another molecule
 To simulate a different molecule, you need to prepare the following files:
