@@ -41,7 +41,11 @@ add_library(qiskit_c_api STATIC IMPORTED)
 
 # nlohmann_json
 include(FetchContent)
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_Declare(
+    json
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+)
 FetchContent_MakeAvailable(json)
 
 # qiskit library
