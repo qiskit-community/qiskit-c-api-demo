@@ -47,7 +47,7 @@ jobs:
           - os: ubuntu-22.04-arm
             compiler: clang++
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
       - name: Install dependencies (Linux)
